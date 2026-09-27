@@ -20,6 +20,10 @@ def test_seed_truth_and_layout_coverage() -> None:
 
 
 def test_defects_change_truth_against_independent_master() -> None:
+    currency = gen.make_document(1, 'test')
+    assert currency['currency'] in {'USD', 'EUR', 'GBP'}
+    assert currency['currency'] != currency['vendor_currencies'][currency['vendor']]
+    assert currency['defects'] == ['currency']
     arithmetic = gen.make_document(3, 'test')
     assert arithmetic['total'] != arithmetic['expected_po_total']
     vendor = gen.make_document(5, 'test')

@@ -52,7 +52,10 @@ def make_document(index: int, split: str, seed: int = SEED) -> dict[str, Any]:
         "created_at": f"2026-09-26T{8 + index % 10:02d}:{index % 60:02d}:00Z",
     }
     defect = index % 12
-    if defect == 3:
+    if defect == 1:
+        doc["currency"] = "EUR" if vendor["currency"] != "EUR" else "USD"
+        doc["defects"] = ["currency"]
+    elif defect == 3:
         doc["total"] += 37.0
         doc["defects"] = ["arithmetic"]
     elif defect == 5:
