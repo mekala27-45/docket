@@ -10,8 +10,14 @@ from packages import ocr
 
 def test_engine_step_ran_independently_of_correctness(monkeypatch: pytest.MonkeyPatch) -> None:
     calls = []
+    # recognize configures pytesseract's process-wide command from the environment.
+    # Register that mutation with monkeypatch too, so later real-engine tests retain
+    # the original executable after this test's temporary environment is restored.
+    monkeypatch.setattr(ocr.pytesseract.pytesseract, 'tesseract_cmd',
+                        ocr.pytesseract.pytesseract.tesseract_cmd)
 
     def recognize(image: Image.Image, **kwargs: Any) -> dict[str, list[Any]]:
+        assert ocr.pytesseract.pytesseract.tesseract_cmd == 'test-command'
         calls.append((image.size, kwargs))
         return {'text': ['', 'WRONG'], 'left': [0, 90], 'top': [0, 45], 'width': [0, 180],
                 'height': [0, 90], 'conf': [-1, 175], 'block_num': [0, 1], 'par_num': [0, 1], 'line_num': [0, 1]}
