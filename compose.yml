@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql+psycopg://docket:docket-local-only@postgres/docket
+      DOCKET_WRITE_TOKEN: ${DOCKET_WRITE_TOKEN:?Set DOCKET_WRITE_TOKEN in your shell}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: docket
+      POSTGRES_USER: docket
+      POSTGRES_PASSWORD: docket-local-only
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docket"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+volumes:
+  postgres-data:

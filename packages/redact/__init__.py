@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import io
+import math
 import re
 from typing import Any
 
@@ -79,7 +80,7 @@ def redact_image(
             if not isinstance(box, list) or len(box) != 4:
                 raise ValueError("Sensitive OCR token has no usable image box")
             x, y, width, height = (float(value) for value in box)
-            if width <= 0 or height <= 0:
+            if not all(math.isfinite(value) for value in (x, y, width, height)) or width <= 0 or height <= 0 or x < 0 or y < 0 or x + width > 1.001 or y + height > 1.001:
                 raise ValueError("Sensitive OCR token has an invalid image box")
             padding = 3
             drawing.rectangle(
