@@ -1,0 +1,21 @@
+[
+  {"item":"CORD corpus, license, provenance, and mapping","status":"Done for a bounded subset","evidence":"data/cord/PROVENANCE.md preserves original train/validation/test membership; full-benchmark coverage is not claimed."},
+  {"item":"Seeded generator and degradations","status":"Done","evidence":"packages/gen renders four layouts, labeled fields, deliberate defects, PDFs, images, and six degradation types."},
+  {"item":"Real and gold OCR paths","status":"Done","evidence":"packages/ocr, committed Tesseract outputs, CER/WER, and test_engine_step_ran_independently_of_correctness."},
+  {"item":"Redaction before upload storage","status":"Done","evidence":"packages/redact and upload tests cover pixel and payload redaction before persistence."},
+  {"item":"Rules extraction and candidate traces","status":"Done","evidence":"packages/extract/rules.py records candidates, selection, normalization, and boxes."},
+  {"item":"Learned extraction on both OCR inputs","status":"Done","evidence":"The CPU token classifier trains on the stated training population; results/manifest.json reports both inputs."},
+  {"item":"Hosted API on Fly and Neon","status":"Outside selected deployment","evidence":"The owner selected GitHub Pages with a recorded demo; Docker and local SQLite/PostgreSQL API configuration are included."},
+  {"item":"Durable review and audit","status":"Done","evidence":"API tests read corrections through independent connections, reject writes without a token, and verify transaction rollback."},
+  {"item":"Business validation and scorecard","status":"Done","evidence":"Six rules have clean, defect, and empty-input tests; missing defect populations remain unmeasured."},
+  {"item":"Held-out calibration","status":"Done","evidence":"packages/calibrate fits validation observations; evaluation contains reliability bins and before/after calibration error."},
+  {"item":"Cost-based routing","status":"Done","evidence":"Validation selects the threshold; test reports review/error rates with intervals and undefined conditional rates remain unavailable."},
+  {"item":"Document classification","status":"Done","evidence":"packages/classify and the manifest confusion matrix; the miscellaneous class uses generated letter tokens."},
+  {"item":"Degradation sweep","status":"Done for the recorded sample","evidence":"Real OCR on generated degraded pages is committed; the lab shows the measured levels and population limits."},
+  {"item":"Retraining loop","status":"Done with explicit simulation boundary","evidence":"The canonical experiment uses simulated validation corrections; the optional API consumes accepted persistent corrections."},
+  {"item":"Static workbench and browser practice","status":"Done","evidence":"web includes inbox, reviewer, trace, evaluation, report, lab, rules, models, and browser SQL with local practice state."},
+  {"item":"Manifest-backed reports","status":"Done","evidence":"scripts/render_reports.py renders complete files and a deliberate mutation test rejects publication drift."},
+  {"item":"Documentation and executed notebooks","status":"Done","evidence":"Architecture, definitions, serving/privacy/runbook, dated decisions, and three evidence notebooks with rejected shortcuts."},
+  {"item":"Release verification","status":"Validation required before deployment","evidence":"GitHub Actions gates publication on Python checks, report drift, palette contrast, notebooks, and browser tests. Commit history records substantive changes; a target commit count is not manufactured."},
+  {"item":"Optional vision model and promotion registry","status":"Not implemented","evidence":"No model key was used; no vision result, production promotion, or model-improvement claim is made."}
+]

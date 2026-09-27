@@ -83,8 +83,12 @@ def main() -> None:
         notebook.metadata['kernelspec'] = {'display_name': 'Python 3', 'language': 'python', 'name': 'python3'}
         manager = KernelManager(kernel_name='python3')
         manager.kernel_spec.argv = [sys.executable, '-m', 'ipykernel_launcher', '-f', '{connection_file}']
-        NotebookClient(notebook, km=manager, timeout=120,
-                       resources={'metadata': {'path': str(ROOT)}}).execute()
+        try:
+            NotebookClient(notebook, km=manager, timeout=120,
+                           resources={'metadata': {'path': str(ROOT)}}).execute()
+        finally:
+            if manager.has_kernel:
+                manager.shutdown_kernel(now=True)
         nbformat.write(notebook, target / (name + '.ipynb'))
         print('Executed', name)
 

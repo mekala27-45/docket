@@ -72,7 +72,8 @@ def make_publications(e: dict[str, Any], checklist: list[dict[str, str]]) -> dic
     measured = table(e)
     checklist_text = '\n'.join(f'| {row["item"]} | {row["status"]} | {row["evidence"]} |' for row in checklist)
     checklist_text = '| Capability | Status | Evidence |\n| --- | --- | --- |\n' + checklist_text
-    headline = (f'At threshold **{op["threshold"]:.3f}**, selected on validation and reported on test, '
+    threshold_label = 'review all' if op['threshold'] > 1 else f'{op["threshold"]:.3f}'
+    headline = (f'At operating point **{threshold_label}**, selected on validation and reported on test, '
                 f'the review rate is **{score(op.get("review_rate"))}** and the error rate among '
                 f'automatically approved documents is **{score(op.get("auto_approval_error"))}**. '
                 f'Review cost: {op["review_cost"]}; wrong approval cost: {op["error_cost"]}. '
@@ -110,7 +111,7 @@ A document intelligence workbench for accounts payable. **Published scope: GitHu
 
 {measured}
 
-Intervals are reported as estimate [lower, upper]. The difference between columns measures the OCR input's contribution to extraction errors on the stated population. Read `results/manifest.json` for sample sizes and the complete run.
+Intervals are reported as estimate [lower, upper]. The difference between columns measures the effect of the OCR input, including recognition, tokenization, and boxes. It is not a guaranteed additive penalty: layout heuristics can perform better on an engine's boxes. Read `results/manifest.json` for sample sizes and the complete run.
 
 ## Run locally
 

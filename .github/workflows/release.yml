@@ -15,4 +15,4 @@ jobs:
       - name: Publish source release with evidence notes
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "docket $GITHUB_REF_NAME" --notes-file RESULTS.md
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "docket $GITHUB_REF_NAME" --notes-file docs/release-notes.md
