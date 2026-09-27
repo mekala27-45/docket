@@ -121,6 +121,7 @@ interface RetrainSlice {
   ocr_engine: string;
   split: string;
   n_test: number;
+  excluded_without_reference?: number;
   before: Measurement;
   after: Measurement;
 }
@@ -142,21 +143,33 @@ export function RetrainEvidence({ run }: { run: RetrainRun }) {
     <>
       <p className="retrain-population">
         {focused
-          ? `CORD test · ${focused.ocr_engine} · n=${focused.n_test}`
+          ? `CORD test · ${focused.ocr_engine} · population n=${focused.n_test}`
           : `Mixed recorded test population${run.n_test != null ? ` · n=${run.n_test}` : ""}`}{" "}
         · field F1
       </p>
       <div className="retrain-flow">
         <div>
           <span>Before retraining</span>
-          <ObservedMetric measurement={focused?.before || run.before} />
+          <ObservedMetric
+            measurement={focused?.before || run.before}
+            denominator
+          />
         </div>
         <span aria-hidden="true">→</span>
         <div>
           <span>After retraining</span>
-          <ObservedMetric measurement={focused?.after || run.after} />
+          <ObservedMetric
+            measurement={focused?.after || run.after}
+            denominator
+          />
         </div>
       </div>
+      {Boolean(focused?.excluded_without_reference) && (
+        <p className="section-caption">
+          {focused?.excluded_without_reference} test documents have no evaluable
+          reference fields and are excluded from both field F1 estimates.
+        </p>
+      )}
       <div className="retrain-provenance">
         {typeof run.human_corrections_used === "number" && (
           <div>
@@ -194,7 +207,7 @@ export function RetrainEvidence({ run }: { run: RetrainRun }) {
                   <th>SOURCE / OCR</th>
                   <th>BEFORE F1</th>
                   <th>AFTER F1</th>
-                  <th>n</th>
+                  <th>POPULATION n</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,10 +220,10 @@ export function RetrainEvidence({ run }: { run: RetrainRun }) {
                       </small>
                     </td>
                     <td>
-                      <ObservedMetric measurement={row.before} />
+                      <ObservedMetric measurement={row.before} denominator />
                     </td>
                     <td>
-                      <ObservedMetric measurement={row.after} />
+                      <ObservedMetric measurement={row.after} denominator />
                     </td>
                     <td>{row.n_test}</td>
                   </tr>
@@ -665,7 +678,9 @@ export function DegradationOverview({
         degradation; JPEG quality and scale values decrease. Severity units
         differ across charts. Vertical bars show 95% intervals. A crossing is
         the first recorded mean below the stated floor, not an estimated failure
-        point between levels. Missing observations are not drawn as zero.
+        point between levels. Missing observations are not drawn as zero. These
+        are repeated measurements of 24 distinct parent pages; duplicate content
+        and shared templates limit their independence.
       </p>
     </section>
   );

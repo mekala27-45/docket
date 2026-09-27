@@ -82,12 +82,12 @@ test("six small multiples preserve severity order, intervals, missingness and re
   expect(circles.at(-1)?.label).toContain("level 10");
   expect(circles[0].x).toBeLessThan(circles.at(-1)!.x);
   await jpeg.getByRole("button", { name: /Jpeg, tokens, level 25:/ }).click();
-  await expect(page.getByLabel("Degradation", { exact: true })).toHaveValue(
-    "jpeg",
-  );
-  await expect(page.getByLabel("Recorded level", { exact: true })).toHaveValue(
-    "25",
-  );
+  await expect(
+    page.getByRole("combobox", { name: "Degradation", exact: true }),
+  ).toHaveValue("jpeg");
+  await expect(
+    page.getByRole("combobox", { name: "Recorded level", exact: true }),
+  ).toHaveValue("25");
   await jpeg.getByRole("button", { name: "Jpeg: show table" }).click();
   await expect(jpeg.getByText("Not measured", { exact: true })).toHaveCount(2);
   await expect(
@@ -201,14 +201,14 @@ test("calibration identifies repeated variants and independently labeled populat
   await serveFixture(page, bundle);
   await page.goto("evaluation/");
   await expect(page.locator("#calibration")).toContainText(
-    "24 independent documents",
+    "24 distinct parent pages",
   );
   await expect(page.locator("#calibration")).toContainText(
     "600 field observations",
   );
   await page.getByLabel("Calibration field").selectOption("rules:cord:total");
   await expect(page.locator("#calibration")).toContainText(
-    "100 independent documents",
+    "100 distinct parent pages",
   );
   await expect(page.locator("#calibration")).toContainText("Cord");
   await expect(page.locator("#calibration .curve-dot")).toHaveCount(2);
@@ -309,14 +309,23 @@ test("expanded benchmark charts are reviewable on desktop and mobile", async ({
   await expect(page.locator(".small-multiples-grid .sweep-card")).toHaveCount(
     6,
   );
-  for(const card of await page.locator('.small-multiples-grid .sweep-card').all()) {
-    await expect(card).toContainText('5 levels · n=24 documents per level');
+  for (const card of await page
+    .locator(".small-multiples-grid .sweep-card")
+    .all()) {
+    await expect(card).toContainText("5 levels · n=24 documents per level");
   }
   await page.screenshot({
     path: `test-results/${testInfo.project.name}-lab-expanded.png`,
     fullPage: true,
     animations: "disabled",
   });
+  await page
+    .locator(".small-multiples-grid .sweep-card")
+    .first()
+    .screenshot({
+      path: `test-results/${testInfo.project.name}-lab-card.png`,
+      animations: "disabled",
+    });
   await page.goto("rules/");
   await expect(
     page.getByRole("region", { name: "Rule detection benchmark" }),
@@ -326,4 +335,25 @@ test("expanded benchmark charts are reviewable on desktop and mobile", async ({
     fullPage: true,
     animations: "disabled",
   });
+  await page.goto("evaluation/");
+  await expect
+    .poll(() => page.locator("#calibration .curve-dot").count())
+    .toBeGreaterThan(1);
+  await expect(page.locator("#calibration")).toContainText(
+    "24 distinct parent pages",
+  );
+  await page.locator("#calibration").screenshot({
+    path: `test-results/${testInfo.project.name}-calibration-expanded.png`,
+    animations: "disabled",
+  });
+  await expect(page.locator(".retrain-population")).toContainText(
+    "population n=100",
+  );
+  await expect(page.locator(".retrain-flow")).toContainText("denominator n=96");
+  await expect(
+    page.getByText(
+      "This run does not measure learning from human corrections.",
+      { exact: false },
+    ),
+  ).toBeVisible();
 });

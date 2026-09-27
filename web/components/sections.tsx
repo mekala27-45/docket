@@ -233,7 +233,9 @@ export function Evaluation({ evaluation }: { evaluation: Manifest }) {
         <p>
           All figures below are read from the committed evaluation manifest.
           Operating thresholds are chosen on validation and reported on test.
-          Intervals are 95%; each table states its population.
+          Intervals are 95%; each table states its population. Some documents
+          lack reference labels; the denominator beside each estimate counts
+          only evaluable observations.
         </p>
       </div>
       <section className="panel section-panel">
@@ -267,7 +269,9 @@ export function Evaluation({ evaluation }: { evaluation: Manifest }) {
                 <th>SOURCE / BACKEND</th>
                 <th>GOLD OCR · FIELD F1</th>
                 <th>REAL OCR · FIELD F1</th>
-                <th>GOLD / REAL n</th>
+                <th title="Total source documents. The denominator beside each metric identifies evaluable observations.">
+                  GOLD / REAL n
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -396,16 +400,16 @@ export function Evaluation({ evaluation }: { evaluation: Manifest }) {
                 <p>
                   {selectedCal.independent_documents != null && (
                     <>
-                      {selectedCal.independent_documents} independent documents;{" "}
+                      {selectedCal.independent_documents} distinct parent pages;{" "}
                       {label(selectedCal.scope || "original")} population.{" "}
                     </>
                   )}
                   Expected calibration error: {pct(selectedCal.ece_before)}{" "}
                   before, {pct(selectedCal.ece_after)} after. Each bin compares
                   reported confidence with observed correctness. Interval bars
-                  preserve uncertainty across independent document parents;
-                  repeated degraded variants do not create independent
-                  documents.
+                  account for repeated variants of the same parent page.
+                  Parent-page clustering does not remove dependence from
+                  duplicate content or shared templates.
                 </p>
               </div>
             </>
