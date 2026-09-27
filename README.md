@@ -69,7 +69,7 @@ Extractor cards: [rules](docs/model-cards/rules.md) and [token classifier](docs/
 | Hosted API on Fly and Neon | Outside selected deployment | The owner selected GitHub Pages with a recorded demo; Docker and local SQLite/PostgreSQL API configuration are included. |
 | Durable review and audit | Done | API tests read corrections through independent connections, reject writes without a token, and verify transaction rollback. |
 | Business validation and scorecard | Done | Six rules have clean, defect, and empty-input tests and injected positive test cases; the scorecard reports precision/recall with intervals and TP/FP/FN/TN. |
-| Held-out calibration | Done | Per-population and per-field calibration includes imperfect validation variants; reliability shows test results, independent parent counts, and intervals. |
+| Held-out calibration | Done | Per-population and per-field calibration includes imperfect validation variants; reliability shows test results, distinct parent-page counts, and intervals. |
 | Cost-based routing | Done | Validation selects the threshold; test reports review/error rates with intervals and undefined conditional rates remain unavailable. |
 | Document classification | Done | packages/classify and the manifest confusion matrix; the miscellaneous class uses generated letter tokens. |
 | Degradation sweep | Done for all generated test parents | Every generated test document is evaluated at five preselected levels per type; six small-multiple charts show both backends, intervals and measured floor crossings. |
@@ -92,7 +92,8 @@ Extractor cards: [rules](docs/model-cards/rules.md) and [token classifier](docs/
 - Extraction measurements condition on the reference document type; document classification is measured separately.
 - No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.
 - Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.
-- Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.
+- Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new distinct parent pages.
 - Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.
+- Distinct generated parent pages include deliberate duplicate-content pairs and shared templates. Parent-page intervals retain those dependencies and do not establish independent-layout generalization.
 
 Code is Apache 2.0. Receipt data retains its own attribution and license under `data/cord`. Generated vendors and transactions are fictional.

@@ -8,7 +8,7 @@
   {"item":"Hosted API on Fly and Neon","status":"Outside selected deployment","evidence":"The owner selected GitHub Pages with a recorded demo; Docker and local SQLite/PostgreSQL API configuration are included."},
   {"item":"Durable review and audit","status":"Done","evidence":"API tests read corrections through independent connections, reject writes without a token, and verify transaction rollback."},
   {"item":"Business validation and scorecard","status":"Done","evidence":"Six rules have clean, defect, and empty-input tests and injected positive test cases; the scorecard reports precision/recall with intervals and TP/FP/FN/TN."},
-  {"item":"Held-out calibration","status":"Done","evidence":"Per-population and per-field calibration includes imperfect validation variants; reliability shows test results, independent parent counts, and intervals."},
+  {"item":"Held-out calibration","status":"Done","evidence":"Per-population and per-field calibration includes imperfect validation variants; reliability shows test results, distinct parent-page counts, and intervals."},
   {"item":"Cost-based routing","status":"Done","evidence":"Validation selects the threshold; test reports review/error rates with intervals and undefined conditional rates remain unavailable."},
   {"item":"Document classification","status":"Done","evidence":"packages/classify and the manifest confusion matrix; the miscellaneous class uses generated letter tokens."},
   {"item":"Degradation sweep","status":"Done for all generated test parents","evidence":"Every generated test document is evaluated at five preselected levels per type; six small-multiple charts show both backends, intervals and measured floor crossings."},

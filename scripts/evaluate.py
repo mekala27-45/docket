@@ -269,6 +269,7 @@ def run() -> dict[str, Any]:
         "Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.",
         "Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.",
         "Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.",
+        "Distinct generated parent pages include deliberate duplicate-content pairs and shared templates. Parent-page intervals retain those dependencies and do not establish independent-layout generalization.",
     ]
     write_json(ROOT / "results/manifest.json", manifest)
     pd.DataFrame([{k: v for k, v in r.items() if k != "fields"} for r in scored]).to_parquet(ROOT / "results/extraction.parquet", index=False)

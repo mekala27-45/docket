@@ -2,7 +2,7 @@
 
 Audit follow-up for the recorded document-intelligence workbench on GitHub Pages. The owner reaffirmed Pages-only hosting; the API remains an optional local service.
 
-Uses all original CORD partitions and a wider generated degradation experiment. Calibration includes imperfect validation pages, separates receipt and generated populations, and reports independent parent counts for image variants. Missing reference values remain unmeasured. Currency parsing recognizes Indonesian currency prefixes without treating malformed or ambiguous values as truth.
+Uses all original CORD partitions and a wider generated degradation experiment. Calibration includes imperfect validation pages, separates receipt and generated populations, and reports distinct parent-page counts for image variants. Missing reference values remain unmeasured. Currency parsing recognizes Indonesian currency prefixes without treating malformed or ambiguous values as truth.
 
 The lab shows all six degradation curves together with per-backend floor crossings. Rule scorecards expose precision, recall and confusion counts against injected defects, including currency mismatches. Routing results are broken down by source; unavailable priority amounts remain unavailable. Extractor model cards are rendered and checked from the same evidence manifest.
 

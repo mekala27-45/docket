@@ -36,8 +36,9 @@ Recorded populations:
     "Extraction measurements condition on the reference document type; document classification is measured separately.",
     "No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.",
     "Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.",
-    "Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.",
-    "Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox."
+    "Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new distinct parent pages.",
+    "Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.",
+    "Distinct generated parent pages include deliberate duplicate-content pairs and shared templates. Parent-page intervals retain those dependencies and do not establish independent-layout generalization."
   ]
 }
 ```
@@ -55,7 +56,7 @@ These are project field metrics on the recorded test partitions, not the officia
 
 ## Calibration and routing
 
-Calibration uses validation data separately by backend, field and source population. Generated image variants keep their parent's partition. Repeated variants do not count as independent documents. The published policy uses the rules backend, with all required fields and business checks gating approval. Corrected human values retain their original model score separately.
+Calibration uses validation data separately by backend, field and source population. Generated image variants keep their parent's partition. Repeated variants do not count as distinct parent pages. The published policy uses the rules backend, with all required fields and business checks gating approval. Corrected human values retain their original model score separately.
 
 ## Limits and update policy
 
@@ -69,7 +70,8 @@ Calibration uses validation data separately by backend, field and source populat
 - Extraction measurements condition on the reference document type; document classification is measured separately.
 - No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.
 - Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.
-- Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.
+- Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new distinct parent pages.
 - Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.
+- Distinct generated parent pages include deliberate duplicate-content pairs and shared templates. Parent-page intervals retain those dependencies and do not establish independent-layout generalization.
 
 The optional retraining command produces an isolated candidate and a before/after report, without replacing the canonical model. Client-declared correction provenance and excluded examples are reported. No automatic promotion, human-review improvement, or paid vision comparison is claimed.

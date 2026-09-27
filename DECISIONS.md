@@ -58,7 +58,7 @@ The audit exposed the limits of a first-shard training sample and small evaluati
 
 ## 2026-09-27: Calibrate imperfect pages without crossing parent splits
 
-Clean generated validation pages cannot establish behavior on damaged scans. Add preselected degradations of validation parents to calibration, then report reliability on different test parents. Keep receipt and generated calibration populations separate and count independent parents alongside image variants. Preserve empirical confidence values, including unfavorable results, rather than adding artificial variation to the interface.
+Clean generated validation pages cannot establish behavior on damaged scans. Add preselected degradations of validation parents to calibration, then report reliability on different test parents. Keep receipt and generated calibration populations separate and count distinct parent pages alongside image variants. Preserve empirical confidence values, including unfavorable results, rather than adding artificial variation to the interface.
 
 ## 2026-09-27: Reaffirm the selected hosting scope
 

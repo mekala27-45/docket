@@ -37,8 +37,9 @@ At operating point **0.900**, selected on validation and reported on test, the r
     "Extraction measurements condition on the reference document type; document classification is measured separately.",
     "No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.",
     "Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.",
-    "Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.",
-    "Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox."
+    "Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new distinct parent pages.",
+    "Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.",
+    "Distinct generated parent pages include deliberate duplicate-content pairs and shared templates. Parent-page intervals retain those dependencies and do not establish independent-layout generalization."
   ]
 }
 ```
@@ -59,8 +60,9 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
 - Extraction measurements condition on the reference document type; document classification is measured separately.
 - No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.
 - Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.
-- Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.
+- Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new distinct parent pages.
 - Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.
+- Distinct generated parent pages include deliberate duplicate-content pairs and shared templates. Parent-page intervals retain those dependencies and do not establish independent-layout generalization.
 
 
 ## Ocr
@@ -162,7 +164,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.13797620467497365
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
@@ -386,7 +388,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.13797620467497365
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
@@ -399,7 +401,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.6576197724933345
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.6,
         "upper": 0.7
       },
@@ -412,7 +414,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.7934506856227534
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.7,
         "upper": 0.8
       },
@@ -425,7 +427,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.7411670330319788,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.8,
         "upper": 0.9
       },
@@ -465,7 +467,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.13797620467497365
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
@@ -478,7 +480,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.8620237953250264,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -505,7 +507,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.13797620467497365
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
@@ -544,7 +546,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.34238022750666547,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.6,
         "upper": 0.7
       },
@@ -676,7 +678,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.13797620467497365
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
@@ -702,7 +704,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.7934506856227534
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.4,
         "upper": 0.5
       },
@@ -807,7 +809,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.48989083645458353
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.3,
         "upper": 0.4
       },
@@ -820,7 +822,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.4385029682449681,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.4,
         "upper": 0.5
       },
@@ -1162,7 +1164,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.8620237953250264,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -1281,7 +1283,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.6576197724933345
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.2,
         "upper": 0.3
       },
@@ -1307,7 +1309,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.34238022750666547,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.8,
         "upper": 0.9
       },
@@ -1347,7 +1349,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.13797620467497365
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
@@ -1413,7 +1415,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.13797620467497365
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
@@ -1452,7 +1454,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.8620237953250264,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -1492,7 +1494,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.7934506856227534
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.2,
         "upper": 0.3
       },
@@ -1518,7 +1520,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.7934506856227534
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.6,
         "upper": 0.7
       },
@@ -1584,7 +1586,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.20654931437724644,
           0.9999999999999999
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.2,
         "upper": 0.3
       },
@@ -1636,7 +1638,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.34238022750666547,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.7,
         "upper": 0.8
       },
@@ -1689,7 +1691,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.20654931437724644,
           0.9999999999999999
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.1,
         "upper": 0.2
       },
@@ -1702,7 +1704,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.7934506856227534
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.3,
         "upper": 0.4
       },
@@ -1755,7 +1757,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.13797620467497365
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
@@ -1768,7 +1770,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0,
           0.6576197724933345
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.2,
         "upper": 0.3
       },
@@ -1807,7 +1809,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.20654931437724644,
           0.9999999999999999
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.5,
         "upper": 0.6
       },
@@ -1833,7 +1835,7 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
           0.8620237953250264,
           1
         ],
-        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "interval_method": "95% Wilson bound using distinct parent-page count for an all-equal bin",
         "lower": 0.9,
         "upper": 1.0
       }

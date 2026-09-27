@@ -244,7 +244,7 @@ These are project field metrics on the recorded test partitions, not the officia
 
 ## Calibration and routing
 
-Calibration uses validation data separately by backend, field and source population. Generated image variants keep their parent's partition. Repeated variants do not count as independent documents. The published policy uses the rules backend, with all required fields and business checks gating approval. Corrected human values retain their original model score separately.
+Calibration uses validation data separately by backend, field and source population. Generated image variants keep their parent's partition. Repeated variants do not count as distinct parent pages. The published policy uses the rules backend, with all required fields and business checks gating approval. Corrected human values retain their original model score separately.
 
 ## Limits and update policy
 

@@ -43,7 +43,7 @@ def reliability(scores: list[float], outcomes: list[int], bins: int = 10,
                            "method": "95% parent-document cluster bootstrap, 500 replicates"}
             if accuracy in (0, 1):
                 uncertainty = proportion_interval(round(accuracy * independent), independent)
-                uncertainty["method"] = "95% Wilson bound using independent parent count for an all-equal bin"
+                uncertainty["method"] = "95% Wilson bound using distinct parent-page count for an all-equal bin"
         rows.append({"confidence": confidence, "accuracy": accuracy, "count": len(members),
                      "independent_documents": independent, "ci": uncertainty["ci"],
                      "interval_method": uncertainty["method"], "lower": i / bins, "upper": (i + 1) / bins})
@@ -110,7 +110,7 @@ class FieldCalibrator:
             value["calibration_population"] = population
             value["calibration_sentence"] = (
                 f"Of 100 fields with this confidence, about {round(calibrated * 100)} were correct. "
-                f"Estimated from {count} validation fields from {parents} independent documents. "
+                f"Estimated from {count} validation fields from {parents} distinct parent pages. "
                 + ("Population: generated pages including controlled degradations; variants share source documents."
                    if population == "generated" else "Population: public CORD receipt amount fields.")
             ) if count else "No held-out calibration observations for this field and document population; review required."
