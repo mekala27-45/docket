@@ -39,6 +39,38 @@ def test_claim_gate_rejects_test_selection() -> None:
         validate_manifest(value)
 
 
+def test_gate_rejects_calibration_leakage_and_inflated_parent_counts() -> None:
+    value = evidence()
+    value['calibration'] = [{'fitted_on': 'test', 'split': 'test', 'n': 30, 'independent_documents': 2}]
+    with pytest.raises(ValueError, match='held-out'):
+        validate_manifest(value)
+    value['calibration'][0]['fitted_on'] = 'validation'
+    validate_manifest(value)
+    value['calibration'][0]['independent_documents'] = 31
+    with pytest.raises(ValueError, match='parent counts'):
+        validate_manifest(value)
+
+
+def test_gate_rejects_rule_rates_that_disagree_with_defect_counts() -> None:
+    value = evidence()
+    value['rules'] = [{'n': 4, 'tp': 1, 'fp': 1, 'fn': 1, 'tn': 1,
+                       'precision': {'value': .5}, 'recall': {'value': .5}}]
+    validate_manifest(value)
+    value['rules'][0]['precision']['value'] = 1
+    with pytest.raises(ValueError, match='injected-defect counts'):
+        validate_manifest(value)
+
+
+def test_gate_rejects_misleading_routing_population_breakdown() -> None:
+    value = evidence()
+    value['operating_point'].update({'n': 10, 'auto_approved': 2, 'by_source': [
+        {'source': 'generated', 'n': 4, 'auto_approved': 2}, {'source': 'cord', 'n': 6, 'auto_approved': 0}]})
+    validate_manifest(value)
+    value['operating_point']['by_source'][1]['auto_approved'] = 1
+    with pytest.raises(ValueError, match='headline population'):
+        validate_manifest(value)
+
+
 def test_whole_file_publication_drift_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     value = evidence()
     value['operating_point'].update({'threshold': .5, 'review_cost': 1, 'error_cost': 20,

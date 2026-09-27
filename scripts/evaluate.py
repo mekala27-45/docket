@@ -42,6 +42,7 @@ def run() -> dict[str, Any]:
     calibration_rows = []
     calibration_variants = read_json(ROOT / "data/generated/calibration/annotations.json")
     sweep = read_json(ROOT / "data/generated/sweep/annotations.json")
+    sweep_config = read_json(ROOT / "data/generated/sweep/config.json")
     parents = {d["id"]: d["split"] for d in dataset}
     for partition, variants in (("validation", calibration_variants), ("test", sweep)):
         if not variants or any(d["split"] != partition or parents.get(d["parent_id"]) != partition for d in variants):
@@ -227,10 +228,12 @@ def run() -> dict[str, Any]:
                             for split in ("train", "validation", "test")} for source in ("generated", "cord")},
         "extraction": extraction_table, "per_field": per_field, "ocr": ocr_table, "operating_point": operating,
         "calibration": calibration_table, "degradation": degradation, "degradation_floors": floors,
-        "degradation_policy": {"field_f1_floor": .8, "levels_per_type": 5, "source": "generated", "split": "test",
-                               "independent_documents_per_level": 24,
+        "degradation_policy": {"field_f1_floor": .8, "levels_per_type": len(next(iter(sweep_config["parameters"].values()))["levels"]),
+                               "parameters": sweep_config["parameters"], "source": "generated", "split": "test",
+                               "independent_documents_per_level": len({d["parent_id"] for d in sweep}),
                                "protocol": "All 24 generated test parents at each preselected severity; no level tuning on test"},
-        "calibration_protocol": {"fitted_on": "validation", "generated_parents": 24, "cord_parents": 100,
+        "calibration_protocol": {"fitted_on": "validation", "generated_parents": len({d["parent_id"] for d in calibration_variants}),
+                                 "cord_parents": sum(d["source"] == "cord" and d["split"] == "validation" for d in dataset),
                                  "generated_variants": len([d for d in calibration_variants if d["level_index"] > 0]),
                                  "test_variants": len([d for d in sweep if d["level_index"] > 0]),
                                  "method": "Per-backend, per-population, per-field isotonic regression; missing values fail closed. "
