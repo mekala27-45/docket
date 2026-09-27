@@ -2,7 +2,7 @@
 
 import json
 import re
-from datetime import date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -49,7 +49,8 @@ def normalize(value: Any, field: str = "") -> str:
     if field in {"date", "due_date"}:
         for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%d.%m.%Y"):
             try:
-                return datetime.strptime(text, fmt).date().isoformat()
+                # Calendar dates have no timezone; no instant is inferred here.
+                return datetime.strptime(text, fmt).date().isoformat()  # noqa: DTZ007
             except ValueError:
                 continue
     return text
@@ -88,4 +89,4 @@ def write_json(path: str | Path, value: Any) -> None:
 
 
 def utc_today() -> str:
-    return date.today().isoformat()
+    return datetime.now(UTC).date().isoformat()

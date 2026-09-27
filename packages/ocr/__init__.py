@@ -4,8 +4,8 @@ import os
 import time
 from typing import Any
 
-from PIL import Image, ImageOps
 import pytesseract
+from PIL import Image, ImageOps
 
 
 def preprocess(image: Image.Image, binarize: bool = False) -> Image.Image:

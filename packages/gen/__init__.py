@@ -7,11 +7,11 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pypdfium2 as pdfium
 from PIL import Image, ImageEnhance, ImageFilter
 from reportlab.lib.colors import HexColor
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen.canvas import Canvas
-import pypdfium2 as pdfium
 
 from packages.core import ROOT, SEED, write_json
 
