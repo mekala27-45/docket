@@ -1,8 +1,8 @@
-import type { NextConfig } from 'next';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
-  basePath: '/docket',
+  output: "export",
+  basePath: "/docket",
   trailingSlash: true,
   images: { unoptimized: true },
   reactStrictMode: true,
