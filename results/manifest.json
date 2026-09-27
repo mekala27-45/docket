@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-27T04:13:39.491637+00:00",
+  "generated_at": "2026-09-27T04:21:43.819594+00:00",
   "seed": 11027,
   "scope": {
     "generated": {
@@ -3438,10 +3438,10 @@
       "source": "generated",
       "split": "test",
       "precision": {
-        "value": 0.5,
+        "value": 1.0,
         "ci": [
-          0.1500389891521544,
-          0.8499610108478456
+          0.5101091635454165,
+          1
         ],
         "n": 4,
         "method": "95% Wilson score interval"
@@ -3449,14 +3449,14 @@
       "recall": {
         "value": 1.0,
         "ci": [
-          0.34238022750666547,
+          0.5101091635454165,
           1
         ],
-        "n": 2,
+        "n": 4,
         "method": "95% Wilson score interval"
       },
       "fired": 4,
-      "expected": 2
+      "expected": 4
     },
     {
       "id": "vendor",
@@ -3593,7 +3593,7 @@
     "ocr_engine": "tesseract",
     "backend": "tokens",
     "model_path": "results/models/retrained-demo.pkl",
-    "run_id": "3031a5951746",
+    "run_id": "e79315bde74d",
     "canonical_model_changed": false,
     "labeling_method": "Corrected values aligned to matching OCR token spans; unmatched spans excluded",
     "correction_source": "Simulated corrections from eight validation documents with known truth"

@@ -12,4 +12,6 @@ The degradation sweep uses generated images with known truth. It changes blur, s
 
 Reviewer corrections can become training examples only for the optional API's explicit retraining path. Browser practice is excluded from the canonical benchmark. A training improvement is not guaranteed, and the before/after report must preserve a decline when one occurs.
 
+Rule labels include direct consequences of each injected defect: changing an invoice total creates both an arithmetic failure and a mismatch with the independently recorded purchase-order total. These propagated consequences are expected positives, not false alarms. Receipt header fields absent from CORD labels receive no generated-header calibration claim; they require review.
+
 Demonstration documents only. Generated invoices contain fictional vendors and transactions. Public CORD receipts are attributed separately.

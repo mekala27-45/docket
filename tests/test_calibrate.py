@@ -46,3 +46,17 @@ def test_reliability_accounts_for_confidence_one():
     assert sum(b["count"] for b in result["bins"]) == 3
     assert result["ece"] == pytest.approx(1 / 6)
     assert reliability([], [])["bins"] == []
+
+
+def test_receipt_headers_cannot_inherit_generated_calibration():
+    rows = [{"backend": "rules", "field": field, "score": .9, "correct": 1}
+            for field in ["vendor", "total"]]
+    model = FieldCalibrator().fit(rows)
+    extraction = {"backend": "rules", "document_type": "receipt", "fields": {
+        field: field_result(field, [{"value": value, "score": .9, "box": [.1, .1, .1, .1]}])
+        for field, value in [("vendor", "Unverified header"), ("total", 10)]}}
+    fields = model.apply(extraction)["fields"]
+    assert fields['vendor']['confidence'] == 0
+    assert fields['vendor']['calibration_n'] == 0
+    assert 'document population' in fields['vendor']['calibration_sentence']
+    assert fields['total']['confidence'] == 1

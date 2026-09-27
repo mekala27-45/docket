@@ -111,7 +111,8 @@ def run() -> dict[str, Any]:
             "correct": score_document(doc, prediction)["document_success"] == 1 and not doc.get("defects")})
         for rule in rules:
             rules_records.append({**rule, "document_id": doc["id"], "source": doc["source"], "split": doc["split"],
-                                  "expected_defect": rule["id"] in doc.get("defects", [])})
+                                  "expected_defect": rule["id"] in doc.get("defects", [])
+                                  or (rule["id"] == "purchase_order" and "arithmetic" in doc.get("defects", []))})
     operating = choose_threshold(routing_records["validation"])
     approved = [r for r in routing_records["test"] if r["rules_pass"] and r["required_present"]
                 and r["confidence"] >= operating["threshold"]]

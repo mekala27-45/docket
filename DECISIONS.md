@@ -44,4 +44,12 @@ The reference proposed provisioning a cloud API before building the interface. A
 
 A model that did not run has no score. The optional vision extractor cannot appear as a measured competitor without credentials, validated outputs, and evaluation on the same labels.
 
+## 2026-09-27: Browser SQL over the recorded corpus
+
+The browser explorer uses SQLite WASM over the small recorded JSON corpus. The Python evaluation still exports Parquet marts. This replaces the reference's DuckDB-WASM choice for the static demo, and the interface names the actual SQL engine. Queries must keep currencies separate and preserve missing amounts as null.
+
+## 2026-09-27: Preserve missing evidence
+
+An absent amount is null, not zero. Corrected fields carry human-review provenance, with their original model confidence retained separately. Duplicate checks compare independent earlier records; generator defect labels cannot cause a rule to fire.
+
 Demonstration documents only. Generated invoices contain fictional vendors and transactions. Public CORD receipts are attributed separately.

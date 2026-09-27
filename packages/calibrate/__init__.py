@@ -61,11 +61,17 @@ class FieldCalibrator:
             calibrated = self.predict(extraction["backend"], field, raw, value.get("value") is None)
             value["raw_confidence"], value["confidence"] = raw, calibrated
             count = self.population.get(f"{extraction['backend']}:{field}", 0)
+            if extraction.get('document_type') == 'receipt' and field not in {'subtotal', 'tax', 'total'}:
+                # CORD has no header truth for these invoice fields. Do not
+                # transfer a generated-header calibration claim to a receipt.
+                count = 0
+                value['confidence'] = calibrated = 0.0
             value["calibration_n"] = count
             value["calibration_sentence"] = (
                 f"Of 100 fields with this confidence, about {round(calibrated * 100)} were correct. "
                 f"Estimated from {count} validation fields; small-sample uncertainty applies."
-            ) if count else "No held-out calibration observations for this field; review required."
+                " Validation headers are generated; amount fields also include public CORD receipts."
+            ) if count else "No held-out calibration observations for this field and document population; review required."
             value["trace"].append({"step": "calibration", "detail": value["calibration_sentence"],
                                    "raw": raw, "calibrated": calibrated, "split": self.fit_split})
         return extraction

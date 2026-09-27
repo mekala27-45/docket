@@ -16,6 +16,6 @@
   {"item":"Static workbench and browser practice","status":"Done","evidence":"web includes inbox, reviewer, trace, evaluation, report, lab, rules, models, and browser SQL with local practice state."},
   {"item":"Manifest-backed reports","status":"Done","evidence":"scripts/render_reports.py renders complete files and a deliberate mutation test rejects publication drift."},
   {"item":"Documentation and executed notebooks","status":"Done","evidence":"Architecture, definitions, serving/privacy/runbook, dated decisions, and three evidence notebooks with rejected shortcuts."},
-  {"item":"Release verification","status":"Validation required before deployment","evidence":"GitHub Actions gates publication on Python checks, report drift, palette contrast, notebooks, and browser tests. Commit history records substantive changes; a target commit count is not manufactured."},
+  {"item":"Release verification","status":"Done, enforced before deployment","evidence":"Python tests exceed the coverage floor; strict mypy, Ruff, report drift, actual theme contrast, executed notebooks, and browser tests are enforced by the Pages workflow. Commit history records substantive changes; a target commit count is not manufactured."},
   {"item":"Optional vision model and promotion registry","status":"Not implemented","evidence":"No model key was used; no vision result, production promotion, or model-improvement claim is made."}
 ]
