@@ -132,11 +132,12 @@ def run() -> dict[str, Any]:
         prior_documents = dataset[:next(i for i, previous in enumerate(dataset) if previous["id"] == doc["id"])]
         rules = validate_document(doc, prediction["fields"], prediction["line_items"], known_documents=prior_documents)
         required = required_fields(doc["type"])
+        scored_document = score_document(doc, prediction)
         routing_records[doc["split"]].append({"document_id": doc["id"], "source": doc["source"],
             "confidence": document_confidence(doc, prediction), "rules_pass": all(r["status"] in {"pass", "not_applicable"} for r in rules),
             "required_present": bool(required) and all(prediction["fields"].get(f, {}).get("value") is not None for f in required),
-            "correct": (score_document(doc, prediction)["document_success"] == 1 and not doc.get("defects"))
-                       if all(doc.get(field) is not None for field in required) else None})
+            "correct": (scored_document["document_success"] == 1 and not doc.get("defects"))
+                       if scored_document["document_evaluable"] else None})
         for rule in rules:
             rules_records.append({**rule, "document_id": doc["id"], "source": doc["source"], "split": doc["split"],
                                   "expected_defect": rule["id"] in doc.get("defects", [])
@@ -252,7 +253,8 @@ def run() -> dict[str, Any]:
         "classification": classification, "rules": rule_scorecard, "comparisons": comparisons,
         "optional_vision": {"available": False, "reason": "No paid vision model configured; not evaluated"},
         "latency": {"ocr_ms": interval([observations[d["id"]]["elapsed_ms"] for d in test]),
-                    "method": "Tesseract subprocess wall time in 4-worker local Docker batch; not API load latency"},
+                    "method": "Recorded Tesseract subprocess timings, including validated cache hits from earlier local Docker runs. "
+                              "Concurrency varied; this is not a controlled API load or concurrency benchmark."},
     }
     manifest["scope"]["limitations"] = [
         "Full original CORD 800/100/100 splits are used, with a project-specific subtotal/tax/total and line-item mapping, not the official benchmark metric.",

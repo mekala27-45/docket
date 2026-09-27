@@ -72,12 +72,14 @@ def table(evidence: dict[str, Any]) -> str:
     groups: dict[tuple[str, str], dict[str, Any]] = {}
     for row in evidence['extraction']:
         groups.setdefault((row['source'], row['backend']), {})[row['ocr_engine']] = row
-    lines = ['| Population / extractor | Gold OCR field F1 | Tesseract field F1 |',
-             '| --- | --- | --- |']
+    lines = ['| Population / extractor | Evaluable / scoped documents | Gold OCR field F1 | Tesseract field F1 |',
+             '| --- | --- | --- | --- |']
     for (source, backend), rows in sorted(groups.items()):
         gold = next((r for k, r in rows.items() if 'gold' in k.lower()), {})
         real = next((r for k, r in rows.items() if 'tesseract' in k.lower()), {})
-        lines.append(f'| {source} / {backend} | {score(gold.get("field_f1"))} | {score(real.get("field_f1"))} |')
+        eligible = real.get('field_f1', {}).get('n', real.get('n', 0))
+        scoped = real.get('n', gold.get('n', 0))
+        lines.append(f'| {source} / {backend} | {eligible} / {scoped} | {score(gold.get("field_f1"))} | {score(real.get("field_f1"))} |')
     return '\n'.join(lines)
 
 
@@ -146,6 +148,8 @@ Open the printed preview URL with `/docket/`. For the optional API, follow [the 
 ## Skills and evidence
 
 {skills}
+
+Extractor cards: [rules](docs/model-cards/rules.md) and [token classifier](docs/model-cards/tokens.md). Their complete contents are rendered from the same evidence and checked for drift.
 
 ## Implementation record
 

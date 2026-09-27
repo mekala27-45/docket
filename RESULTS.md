@@ -3,14 +3,14 @@
 
 > Demonstration documents only. Generated invoices contain fictional vendors and transactions. Public CORD receipts are attributed separately. Browser review practice is local to this device.
 
-At operating point **1.000**, selected on validation and reported on test, the review rate is **0.682 [0.534, 0.800]** and the error rate among automatically approved documents is **0.000 [0.000, 0.215]**. Review cost: 1; wrong approval cost: 20. These are policy cost units, not observed financial losses.
+At operating point **0.900**, selected on validation and reported on test, the review rate is **0.903 [0.838, 0.944]** and the error rate among automatically approved documents is **0.000 [0.000, 0.242]**. Review cost: 1; wrong approval cost: 20. These are policy cost units, not observed financial losses.
 
-| Population / extractor | Gold OCR field F1 | Tesseract field F1 |
-| --- | --- | --- |
-| cord / rules | 0.657 [0.499, 0.797] | 0.215 [0.090, 0.346] |
-| cord / tokens | 0.602 [0.411, 0.781] | 0.113 [0.033, 0.267] |
-| generated / rules | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
-| generated / tokens | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
+| Population / extractor | Evaluable / scoped documents | Gold OCR field F1 | Tesseract field F1 |
+| --- | --- | --- | --- |
+| cord / rules | 96 / 100 | 0.635 [0.552, 0.706] | 0.248 [0.178, 0.320] |
+| cord / tokens | 96 / 100 | 0.855 [0.799, 0.904] | 0.310 [0.229, 0.391] |
+| generated / rules | 24 / 24 | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
+| generated / tokens | 24 / 24 | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
 
 ## Recorded population
 
@@ -22,12 +22,12 @@ At operating point **1.000**, selected on validation and reported on test, the r
     "test": 24
   },
   "cord": {
-    "train": 48,
-    "validation": 20,
-    "test": 20
+    "train": 800,
+    "validation": 100,
+    "test": 100
   },
   "limitations": [
-    "Bounded CORD subset, not the full benchmark: first-shard seeded training sample and first validation/test rows.",
+    "Full original CORD 800/100/100 splits are used, with a project-specific subtotal/tax/total and line-item mapping, not the official benchmark metric.",
     "Generated invoices share four templates; performance does not establish generalization to unseen vendors or layouts.",
     "Small test populations give wide intervals; the chosen costs are illustrative (review 1, wrong approval 20).",
     "CORD gold words cover annotated semantic lines; full-page OCR CER/WER includes unannotated text.",
@@ -36,7 +36,9 @@ At operating point **1.000**, selected on validation and reported on test, the r
     "Other-class classification uses generated text tokens; no real miscellaneous mailroom documents were evaluated.",
     "Extraction measurements condition on the reference document type; document classification is measured separately.",
     "No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.",
-    "Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed."
+    "Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.",
+    "Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.",
+    "Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox."
   ]
 }
 ```
@@ -45,7 +47,7 @@ At operating point **1.000**, selected on validation and reported on test, the r
 
 | Capability | Status | Evidence |
 | --- | --- | --- |
-| CORD corpus, license, provenance, and mapping | Done for a bounded subset | data/cord/PROVENANCE.md preserves original train/validation/test membership; full-benchmark coverage is not claimed. |
+| CORD corpus, license, provenance, and mapping | Done for the full original splits | data/cord/PROVENANCE.md pins the source revision and preserves every original train/validation/test row; the project's field mapping is distinct from the official benchmark metric. |
 | Seeded generator and degradations | Done | packages/gen renders four layouts, labeled fields, deliberate defects, PDFs, images, and six degradation types. |
 | Real and gold OCR paths | Done | packages/ocr, committed Tesseract outputs, CER/WER, and test_engine_step_ran_independently_of_correctness. |
 | Redaction before upload storage | Done | packages/redact and upload tests cover pixel and payload redaction before persistence. |
@@ -53,11 +55,11 @@ At operating point **1.000**, selected on validation and reported on test, the r
 | Learned extraction on both OCR inputs | Done | The CPU token classifier trains on the stated training population; results/manifest.json reports both inputs. |
 | Hosted API on Fly and Neon | Outside selected deployment | The owner selected GitHub Pages with a recorded demo; Docker and local SQLite/PostgreSQL API configuration are included. |
 | Durable review and audit | Done | API tests read corrections through independent connections, reject writes without a token, and verify transaction rollback. |
-| Business validation and scorecard | Done | Six rules have clean, defect, and empty-input tests; missing defect populations remain unmeasured. |
-| Held-out calibration | Done | packages/calibrate fits validation observations; evaluation contains reliability bins and before/after calibration error. |
+| Business validation and scorecard | Done | Six rules have clean, defect, and empty-input tests and injected positive test cases; the scorecard reports precision/recall with intervals and TP/FP/FN/TN. |
+| Held-out calibration | Done | Per-population and per-field calibration includes imperfect validation variants; reliability shows test results, independent parent counts, and intervals. |
 | Cost-based routing | Done | Validation selects the threshold; test reports review/error rates with intervals and undefined conditional rates remain unavailable. |
 | Document classification | Done | packages/classify and the manifest confusion matrix; the miscellaneous class uses generated letter tokens. |
-| Degradation sweep | Done for the recorded sample | Real OCR on generated degraded pages is committed; the lab shows the measured levels and population limits. |
+| Degradation sweep | Done for all generated test parents | Every generated test document is evaluated at five preselected levels per type; six small-multiple charts show both backends, intervals and measured floor crossings. |
 | Retraining loop | Done with explicit simulation boundary | The canonical experiment uses simulated validation corrections; the optional API consumes accepted persistent corrections. |
 | Static workbench and browser practice | Done | web includes inbox, reviewer, trace, evaluation, report, lab, rules, models, and browser SQL with local practice state. |
 | Manifest-backed reports | Done | scripts/render_reports.py renders complete files and a deliberate mutation test rejects publication drift. |
@@ -67,7 +69,7 @@ At operating point **1.000**, selected on validation and reported on test, the r
 
 ## Limits
 
-- Bounded CORD subset, not the full benchmark: first-shard seeded training sample and first validation/test rows.
+- Full original CORD 800/100/100 splits are used, with a project-specific subtotal/tax/total and line-item mapping, not the official benchmark metric.
 - Generated invoices share four templates; performance does not establish generalization to unseen vendors or layouts.
 - Small test populations give wide intervals; the chosen costs are illustrative (review 1, wrong approval 20).
 - CORD gold words cover annotated semantic lines; full-page OCR CER/WER includes unannotated text.
@@ -77,6 +79,8 @@ At operating point **1.000**, selected on validation and reported on test, the r
 - Extraction measurements condition on the reference document type; document classification is measured separately.
 - No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.
 - Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.
+- Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.
+- Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.
 
 Every quantitative section below is rendered verbatim from the evidence manifest. A missing result remains missing.
 
@@ -114,30 +118,44 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "source": "cord",
     "engine": "tesseract",
-    "n": 20,
+    "n": 100,
     "split": "test",
     "version": "5.3.0",
     "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
     "cer": {
-      "value": 1.5929425568845996,
+      "value": 1.8886948405989599,
       "ci": [
-        0.8104157574205149,
-        2.587708795342633
+        1.1701656658272261,
+        2.9218174092822102
       ],
-      "n": 20,
+      "n": 100,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "wer": {
-      "value": 2.801792640354021,
+      "value": 3.4420827238183187,
       "ci": [
-        1.4364570732043558,
-        4.423058875677481
+        2.30554699215026,
+        5.093115927327521
       ],
-      "n": 20,
+      "n": 100,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     }
   }
 ]
+```
+
+
+## Calibration Protocol
+
+```json
+{
+  "fitted_on": "validation",
+  "generated_parents": 24,
+  "cord_parents": 100,
+  "generated_variants": 576,
+  "test_variants": 576,
+  "method": "Per-backend, per-population, per-field isotonic regression; missing values fail closed. Generated reliability intervals resample parent documents, retaining their variants. Routing is selected and reported on the original document populations."
+}
 ```
 
 
@@ -148,16 +166,64 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "vendor",
     "backend": "rules",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.12835624999999995,
-    "ece_after": 0.0,
+    "ece_before": 0.13038855000000013,
+    "ece_after": 0.0008894269572235806,
     "bins": [
       {
-        "confidence": 1.0,
-        "accuracy": 1.0,
-        "count": 24,
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 136,
+        "independent_documents": 24,
+        "ci": [
+          0,
+          0.13797620467497365
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.14285714285714285,
+        "accuracy": 0.13333333333333333,
+        "count": 45,
+        "independent_documents": 12,
+        "ci": [
+          0.045454545454545456,
+          0.21658141517476553
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.1,
+        "upper": 0.2
+      },
+      {
+        "confidence": 0.75,
+        "accuracy": 0.75,
+        "count": 8,
+        "independent_documents": 8,
+        "ci": [
+          0.375,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 0.941861520062683,
+        "accuracy": 0.9416058394160584,
+        "count": 411,
+        "independent_documents": 24,
+        "ci": [
+          0.9184285554561717,
+          0.9623724730776497
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -166,16 +232,77 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "number",
     "backend": "rules",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.095421875,
-    "ece_after": 0.0,
+    "ece_before": 0.06801341666666669,
+    "ece_after": 0.011001492884083962,
     "bins": [
       {
-        "confidence": 1.0,
-        "accuracy": 1.0,
-        "count": 24,
+        "confidence": 0.0,
+        "accuracy": 0.005555555555555556,
+        "count": 180,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.016666666666666666
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.1,
+        "accuracy": 0.3,
+        "count": 10,
+        "independent_documents": 6,
+        "ci": [
+          0.09090909090909091,
+          0.6666666666666666
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.1,
+        "upper": 0.2
+      },
+      {
+        "confidence": 0.5,
+        "accuracy": 0.6666666666666666,
+        "count": 3,
+        "independent_documents": 3,
+        "ci": [
+          0.3333333333333333,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.5,
+        "upper": 0.6
+      },
+      {
+        "confidence": 0.733371891266628,
+        "accuracy": 0.5384615384615384,
+        "count": 13,
+        "independent_documents": 11,
+        "ci": [
+          0.23076923076923078,
+          0.8461538461538461
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 0.9836727440202645,
+        "accuracy": 0.9822335025380711,
+        "count": 394,
+        "independent_documents": 24,
+        "ci": [
+          0.9715335051546392,
+          0.9923180208538265
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -184,16 +311,77 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "date",
     "backend": "rules",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.06501999999999997,
-    "ece_after": 0.0,
+    "ece_before": 0.04095360000000005,
+    "ece_after": 0.011261151367269732,
     "bins": [
       {
-        "confidence": 1.0,
-        "accuracy": 1.0,
-        "count": 24,
+        "confidence": 0.0,
+        "accuracy": 0.02459016393442623,
+        "count": 122,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.05350667938931297
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.2857142857142857,
+        "accuracy": 0.2857142857142857,
+        "count": 7,
+        "independent_documents": 6,
+        "ci": [
+          0.0,
+          0.6666666666666666
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.7142857142857143,
+        "accuracy": 0.6363636363636364,
+        "count": 11,
+        "independent_documents": 9,
+        "ci": [
+          0.3446428571428572,
+          0.9
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 0.8221592985020095,
+        "accuracy": 0.8260869565217391,
+        "count": 46,
+        "independent_documents": 19,
+        "ci": [
+          0.7215439276485788,
+          0.9175595238095238
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.9751663664113802,
+        "accuracy": 0.9685990338164251,
+        "count": 414,
+        "independent_documents": 24,
+        "ci": [
+          0.9552329937069224,
+          0.9827160493827161
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -202,16 +390,77 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "due_date",
     "backend": "rules",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.06159999999999999,
-    "ece_after": 0.0,
+    "ece_before": 0.04657893333333333,
+    "ece_after": 0.008604166666666685,
     "bins": [
       {
-        "confidence": 1.0,
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 232,
+        "independent_documents": 24,
+        "ci": [
+          0,
+          0.13797620467497365
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.625,
+        "accuracy": 0.0,
+        "count": 2,
+        "independent_documents": 2,
+        "ci": [
+          0,
+          0.6576197724933345
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.7125000000000017,
+        "accuracy": 0.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0,
+          0.7934506856227534
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 0.8,
         "accuracy": 1.0,
-        "count": 24,
+        "count": 11,
+        "independent_documents": 11,
+        "ci": [
+          0.7411670330319788,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 1.0,
+        "accuracy": 0.9971751412429378,
+        "count": 354,
+        "independent_documents": 24,
+        "ci": [
+          0.9913910433751606,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -220,16 +469,38 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "currency",
     "backend": "rules",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.055098749999999974,
+    "ece_before": 0.06450387500000003,
     "ece_after": 0.0,
     "bins": [
       {
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 140,
+        "independent_documents": 24,
+        "ci": [
+          0,
+          0.13797620467497365
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
         "confidence": 1.0,
         "accuracy": 1.0,
-        "count": 24,
+        "count": 460,
+        "independent_documents": 24,
+        "ci": [
+          0.8620237953250264,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -238,16 +509,77 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "po_number",
     "backend": "rules",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.09684687499999994,
-    "ece_after": 0.0,
+    "ece_before": 0.04191458333333331,
+    "ece_after": 0.013274089657680066,
     "bins": [
       {
-        "confidence": 1.0,
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 233,
+        "independent_documents": 24,
+        "ci": [
+          0,
+          0.13797620467497365
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.11111111111111112,
+        "accuracy": 0.4,
+        "count": 5,
+        "independent_documents": 5,
+        "ci": [
+          0.0,
+          0.8
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.1,
+        "upper": 0.2
+      },
+      {
+        "confidence": 0.5,
+        "accuracy": 0.6666666666666666,
+        "count": 3,
+        "independent_documents": 2,
+        "ci": [
+          0.5,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.5,
+        "upper": 0.6
+      },
+      {
+        "confidence": 0.6666666666666666,
         "accuracy": 1.0,
-        "count": 24,
+        "count": 3,
+        "independent_documents": 2,
+        "ci": [
+          0.34238022750666547,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.9635393521072011,
+        "accuracy": 0.949438202247191,
+        "count": 356,
+        "independent_documents": 24,
+        "ci": [
+          0.9270634658357726,
+          0.9719101123595506
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -256,30 +588,90 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "subtotal",
     "backend": "rules",
-    "n": 37,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.07789121621621617,
-    "ece_after": 0.016136227291605777,
+    "ece_before": 0.046178708333333304,
+    "ece_after": 0.0066096866096866285,
     "bins": [
       {
         "confidence": 0.0,
-        "accuracy": 0.0,
-        "count": 9,
+        "accuracy": 0.004048582995951417,
+        "count": 247,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.012148406766325726
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.0,
         "upper": 0.1
       },
       {
-        "confidence": 0.5323468032631379,
-        "accuracy": 0.3333333333333333,
-        "count": 3,
-        "lower": 0.5,
-        "upper": 0.6
+        "confidence": 0.3333333333333333,
+        "accuracy": 0.5,
+        "count": 2,
+        "independent_documents": 2,
+        "ci": [
+          0.0,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.44444444444444564,
+        "accuracy": 0.5,
+        "count": 4,
+        "independent_documents": 3,
+        "ci": [
+          0.0,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.4,
+        "upper": 0.5
+      },
+      {
+        "confidence": 0.6666666666666666,
+        "accuracy": 0.75,
+        "count": 4,
+        "independent_documents": 4,
+        "ci": [
+          0.25,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.7692307692307693,
+        "accuracy": 0.7777777777777778,
+        "count": 9,
+        "independent_documents": 6,
+        "ci": [
+          0.6,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.7,
+        "upper": 0.8
       },
       {
         "confidence": 1.0,
-        "accuracy": 1.0,
-        "count": 25,
+        "accuracy": 0.9940119760479041,
+        "count": 334,
+        "independent_documents": 24,
+        "ci": [
+          0.9848702279593519,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -288,23 +680,90 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "tax",
     "backend": "rules",
-    "n": 32,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.07354765625000004,
-    "ece_after": 0.03125000000000003,
+    "ece_before": 0.04374787500000005,
+    "ece_after": 0.006338321005485541,
     "bins": [
       {
         "confidence": 0.0,
         "accuracy": 0.0,
-        "count": 7,
+        "count": 254,
+        "independent_documents": 24,
+        "ci": [
+          0,
+          0.13797620467497365
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
       {
-        "confidence": 1.0,
-        "accuracy": 0.96,
-        "count": 25,
+        "confidence": 0.16652018229166665,
+        "accuracy": 0.25,
+        "count": 8,
+        "independent_documents": 8,
+        "ci": [
+          0.0,
+          0.5656249999999972
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.1,
+        "upper": 0.2
+      },
+      {
+        "confidence": 0.44047619047619047,
+        "accuracy": 0.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0,
+          0.7934506856227534
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.4,
+        "upper": 0.5
+      },
+      {
+        "confidence": 0.7142857142857143,
+        "accuracy": 0.6666666666666666,
+        "count": 3,
+        "independent_documents": 3,
+        "ci": [
+          0.3333333333333333,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 0.8571428571428571,
+        "accuracy": 0.9,
+        "count": 10,
+        "independent_documents": 8,
+        "ci": [
+          0.6666666666666666,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.9942075595670367,
+        "accuracy": 0.9876543209876543,
+        "count": 324,
+        "independent_documents": 24,
+        "ci": [
+          0.9778072193534127,
+          0.9969374401981201
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -313,37 +772,366 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "total",
     "backend": "rules",
-    "n": 43,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.04499783425185719,
-    "ece_after": 0.11720930232558135,
+    "ece_before": 0.14428566750185595,
+    "ece_after": 0.021510378217634466,
     "bins": [
       {
-        "confidence": 0.0,
-        "accuracy": 0.16666666666666666,
-        "count": 12,
+        "confidence": 0.0065392354124748486,
+        "accuracy": 0.007042253521126761,
+        "count": 142,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.020919135502671188
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.0,
         "upper": 0.1
       },
       {
-        "confidence": 0.6,
-        "accuracy": 0.0,
-        "count": 1,
-        "lower": 0.6,
-        "upper": 0.7
+        "confidence": 0.14224137931034483,
+        "accuracy": 0.20689655172413793,
+        "count": 29,
+        "independent_documents": 18,
+        "ci": [
+          0.08,
+          0.3448275862068966
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.1,
+        "upper": 0.2
       },
       {
-        "confidence": 0.8400000000000002,
+        "confidence": 0.2727272727272727,
+        "accuracy": 0.2,
+        "count": 15,
+        "independent_documents": 11,
+        "ci": [
+          0.0,
+          0.48173076923076835
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.3333333333333333,
+        "accuracy": 0.0,
+        "count": 5,
+        "independent_documents": 4,
+        "ci": [
+          0,
+          0.48989083645458353
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.46673812440451884,
         "accuracy": 1.0,
         "count": 3,
+        "independent_documents": 3,
+        "ci": [
+          0.4385029682449681,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.4,
+        "upper": 0.5
+      },
+      {
+        "confidence": 0.549673202614379,
+        "accuracy": 0.4444444444444444,
+        "count": 45,
+        "independent_documents": 21,
+        "ci": [
+          0.3055288461538462,
+          0.5649928263988521
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.5,
+        "upper": 0.6
+      },
+      {
+        "confidence": 0.8586175115207373,
+        "accuracy": 0.8064516129032258,
+        "count": 31,
+        "independent_documents": 17,
+        "ci": [
+          0.6413571428571428,
+          0.9310344827586207
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.8,
         "upper": 0.9
       },
       {
-        "confidence": 0.9985185185185185,
-        "accuracy": 0.9259259259259259,
-        "count": 27,
+        "confidence": 0.9977272727272727,
+        "accuracy": 0.996969696969697,
+        "count": 330,
+        "independent_documents": 24,
+        "ci": [
+          0.9905660377358491,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.9,
+        "upper": 1.0
+      }
+    ]
+  },
+  {
+    "field": "subtotal",
+    "backend": "rules",
+    "n": 65,
+    "split": "test",
+    "population": "cord",
+    "independent_documents": 65,
+    "scope": "original",
+    "fitted_on": "validation",
+    "ece_before": 0.07300653846153847,
+    "ece_after": 0.07116627876907163,
+    "bins": [
+      {
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 46,
+        "independent_documents": 46,
+        "ci": [
+          0,
+          0.07707356308557646
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.625808119989656,
+        "accuracy": 0.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0,
+          0.7934506856227534
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.7333333333333333,
+        "accuracy": 0.4666666666666667,
+        "count": 15,
+        "independent_documents": 15,
+        "ci": [
+          0.24809535365737842,
+          0.6988301997450107
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 1.0,
+        "accuracy": 1.0,
+        "count": 3,
+        "independent_documents": 3,
+        "ci": [
+          0.4385029682449681,
+          1
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.9,
+        "upper": 1.0
+      }
+    ]
+  },
+  {
+    "field": "tax",
+    "backend": "rules",
+    "n": 40,
+    "split": "test",
+    "population": "cord",
+    "independent_documents": 40,
+    "scope": "original",
+    "fitted_on": "validation",
+    "ece_before": 0.046185000000000004,
+    "ece_after": 0.036805555555555564,
+    "bins": [
+      {
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 36,
+        "independent_documents": 36,
+        "ci": [
+          0,
+          0.09641862859445885
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.11111111111111062,
+        "accuracy": 1.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.1,
+        "upper": 0.2
+      },
+      {
+        "confidence": 0.41666666666666663,
+        "accuracy": 1.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.4,
+        "upper": 0.5
+      },
+      {
+        "confidence": 0.5,
+        "accuracy": 0.5,
+        "count": 2,
+        "independent_documents": 2,
+        "ci": [
+          0.09453120573423457,
+          0.9054687942657654
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.5,
+        "upper": 0.6
+      }
+    ]
+  },
+  {
+    "field": "total",
+    "backend": "rules",
+    "n": 95,
+    "split": "test",
+    "population": "cord",
+    "independent_documents": 95,
+    "scope": "original",
+    "fitted_on": "validation",
+    "ece_before": 0.2638337656178796,
+    "ece_after": 0.13060609282764177,
+    "bins": [
+      {
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 26,
+        "independent_documents": 26,
+        "ci": [
+          0,
+          0.12872892185920912
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.2413793103448276,
+        "accuracy": 0.17391304347826086,
+        "count": 23,
+        "independent_documents": 23,
+        "ci": [
+          0.06978653563062737,
+          0.3713764764022553
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.34188180804528695,
+        "accuracy": 0.0,
+        "count": 7,
+        "independent_documents": 7,
+        "ci": [
+          0,
+          0.35433043506667483
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.436245207167885,
+        "accuracy": 0.5555555555555556,
+        "count": 9,
+        "independent_documents": 9,
+        "ci": [
+          0.266651293495499,
+          0.8112214789023309
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.4,
+        "upper": 0.5
+      },
+      {
+        "confidence": 0.5555555555555556,
+        "accuracy": 0.7,
+        "count": 10,
+        "independent_documents": 10,
+        "ci": [
+          0.3967781474611528,
+          0.8922087325936959
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.5,
+        "upper": 0.6
+      },
+      {
+        "confidence": 0.6666666666666645,
+        "accuracy": 1.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.7685185185185185,
+        "accuracy": 0.5,
+        "count": 6,
+        "independent_documents": 6,
+        "ci": [
+          0.18761630648265576,
+          0.8123836935173443
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 1.0,
+        "accuracy": 0.6923076923076923,
+        "count": 13,
+        "independent_documents": 13,
+        "ci": [
+          0.4236934318054971,
+          0.8731929634428918
+        ],
+        "interval_method": "95% Wilson score interval",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -352,16 +1140,51 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "vendor",
     "backend": "tokens",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.0457585958702208,
-    "ece_after": 0.0,
+    "ece_before": 0.11242019078592316,
+    "ece_after": 0.003928571428571426,
     "bins": [
+      {
+        "confidence": 0.0,
+        "accuracy": 0.007692307692307693,
+        "count": 130,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.023622047244094488
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.23029556650246302,
+        "accuracy": 0.20689655172413793,
+        "count": 58,
+        "independent_documents": 23,
+        "ci": [
+          0.1111111111111111,
+          0.2878787878787879
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.2,
+        "upper": 0.3
+      },
       {
         "confidence": 1.0,
         "accuracy": 1.0,
-        "count": 24,
+        "count": 412,
+        "independent_documents": 24,
+        "ci": [
+          0.8620237953250264,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -370,16 +1193,77 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "number",
     "backend": "tokens",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.05877122055728534,
-    "ece_after": 0.0,
+    "ece_before": 0.10117865273756647,
+    "ece_after": 0.014142801947406188,
     "bins": [
       {
-        "confidence": 1.0,
-        "accuracy": 1.0,
-        "count": 24,
+        "confidence": 0.0,
+        "accuracy": 0.024390243902439025,
+        "count": 164,
+        "independent_documents": 24,
+        "ci": [
+          0.006408465173618246,
+          0.045852216748768465
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.631578947368421,
+        "accuracy": 0.5,
+        "count": 20,
+        "independent_documents": 16,
+        "ci": [
+          0.2751262626262626,
+          0.7222222222222222
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.7371954931025962,
+        "accuracy": 0.6666666666666666,
+        "count": 3,
+        "independent_documents": 3,
+        "ci": [
+          0.3333333333333333,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 0.8332157767362874,
+        "accuracy": 0.8461538461538461,
+        "count": 39,
+        "independent_documents": 16,
+        "ci": [
+          0.6764705882352942,
+          0.972972972972973
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.9942836068596719,
+        "accuracy": 0.9973262032085561,
+        "count": 374,
+        "independent_documents": 24,
+        "ci": [
+          0.9918466582485989,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -388,16 +1272,77 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "date",
     "backend": "tokens",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.038577957990655,
-    "ece_after": 0.0,
+    "ece_before": 0.05557158997309099,
+    "ece_after": 0.01044902639814197,
     "bins": [
       {
-        "confidence": 1.0,
+        "confidence": 0.0,
+        "accuracy": 0.013215859030837005,
+        "count": 227,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.028267045454545413
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.25,
+        "accuracy": 0.0,
+        "count": 2,
+        "independent_documents": 2,
+        "ci": [
+          0,
+          0.6576197724933345
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.774172141539484,
+        "accuracy": 0.5,
+        "count": 4,
+        "independent_documents": 3,
+        "ci": [
+          0.0,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 0.8,
         "accuracy": 1.0,
-        "count": 24,
+        "count": 2,
+        "independent_documents": 2,
+        "ci": [
+          0.34238022750666547,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.9980074719800747,
+        "accuracy": 0.9945205479452055,
+        "count": 365,
+        "independent_documents": 24,
+        "ci": [
+          0.9860314599377356,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -406,16 +1351,64 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "due_date",
     "backend": "tokens",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.03699242267967795,
-    "ece_after": 0.0,
+    "ece_before": 0.0849996628825625,
+    "ece_after": 0.01134590132978382,
     "bins": [
       {
-        "confidence": 1.0,
-        "accuracy": 1.0,
-        "count": 24,
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 129,
+        "independent_documents": 24,
+        "ci": [
+          0,
+          0.13797620467497365
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.49206349206349204,
+        "accuracy": 0.4576271186440678,
+        "count": 118,
+        "independent_documents": 24,
+        "ci": [
+          0.3912689393939394,
+          0.5168149717514124
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.4,
+        "upper": 0.5
+      },
+      {
+        "confidence": 0.8406585457723975,
+        "accuracy": 0.9090909090909091,
+        "count": 11,
+        "independent_documents": 9,
+        "ci": [
+          0.6666666666666666,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.9999745401692239,
+        "accuracy": 0.9941520467836257,
+        "count": 342,
+        "independent_documents": 24,
+        "ci": [
+          0.9853801169590644,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -424,16 +1417,64 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "currency",
     "backend": "tokens",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.03897839802168912,
-    "ece_after": 0.0,
+    "ece_before": 0.05651262496202038,
+    "ece_after": 0.00101562348692844,
     "bins": [
       {
-        "confidence": 1.0,
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 150,
+        "independent_documents": 24,
+        "ci": [
+          0,
+          0.13797620467497365
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.3333333333333333,
+        "accuracy": 0.3333333333333333,
+        "count": 3,
+        "independent_documents": 3,
+        "ci": [
+          0.0,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.8214285714285714,
+        "accuracy": 0.8,
+        "count": 25,
+        "independent_documents": 19,
+        "ci": [
+          0.6510326086956522,
+          0.9259259259259259
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.9998254506956332,
         "accuracy": 1.0,
-        "count": 24,
+        "count": 422,
+        "independent_documents": 24,
+        "ci": [
+          0.8620237953250264,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -442,16 +1483,90 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "po_number",
     "backend": "tokens",
-    "n": 24,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.0605134424372342,
-    "ece_after": 0.0,
+    "ece_before": 0.06585639775602461,
+    "ece_after": 0.012589999624824632,
     "bins": [
       {
-        "confidence": 1.0,
-        "accuracy": 1.0,
-        "count": 24,
+        "confidence": 0.0,
+        "accuracy": 0.015789473684210527,
+        "count": 190,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.03571428571428571
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.20395029073708315,
+        "accuracy": 0.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0,
+          0.7934506856227534
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.5454545454545454,
+        "accuracy": 0.6,
+        "count": 5,
+        "independent_documents": 5,
+        "ci": [
+          0.2,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.5,
+        "upper": 0.6
+      },
+      {
+        "confidence": 0.6552083878997812,
+        "accuracy": 0.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0,
+          0.7934506856227534
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.8360946523611993,
+        "accuracy": 0.8181818181818182,
+        "count": 33,
+        "independent_documents": 20,
+        "ci": [
+          0.7027027027027027,
+          0.9375
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.9968405143124623,
+        "accuracy": 0.9891891891891892,
+        "count": 370,
+        "independent_documents": 24,
+        "ci": [
+          0.9773851508777893,
+          0.9972972972972973
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -460,23 +1575,103 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "subtotal",
     "backend": "tokens",
-    "n": 37,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.04084362420666728,
-    "ece_after": 0.027027027027027008,
+    "ece_before": 0.03000749972578024,
+    "ece_after": 0.010087411158833333,
     "bins": [
       {
         "confidence": 0.0,
-        "accuracy": 0.0,
-        "count": 11,
+        "accuracy": 0.007874015748031496,
+        "count": 254,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.02036875725900116
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.0,
         "upper": 0.1
       },
       {
+        "confidence": 0.21156641964632644,
+        "accuracy": 1.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.3333333333333333,
+        "accuracy": 0.42857142857142855,
+        "count": 7,
+        "independent_documents": 7,
+        "ci": [
+          0.14285714285714285,
+          0.8571428571428571
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.5150465372600792,
+        "accuracy": 0.6,
+        "count": 5,
+        "independent_documents": 4,
+        "ci": [
+          0.0,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.5,
+        "upper": 0.6
+      },
+      {
+        "confidence": 0.6659276081774945,
+        "accuracy": 0.75,
+        "count": 8,
+        "independent_documents": 6,
+        "ci": [
+          0.6,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.75,
+        "accuracy": 1.0,
+        "count": 2,
+        "independent_documents": 2,
+        "ci": [
+          0.34238022750666547,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
         "confidence": 1.0,
-        "accuracy": 0.9615384615384616,
-        "count": 26,
+        "accuracy": 0.9969040247678018,
+        "count": 323,
+        "independent_documents": 24,
+        "ci": [
+          0.9905362776025236,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -485,23 +1680,77 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "tax",
     "backend": "tokens",
-    "n": 32,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.07466847843093001,
-    "ece_after": 0.03124999999999998,
+    "ece_before": 0.03427463256891551,
+    "ece_after": 0.006593402796468023,
     "bins": [
       {
-        "confidence": 0.0,
-        "accuracy": 0.0,
-        "count": 6,
+        "confidence": 0.002808002808002808,
+        "accuracy": 0.003861003861003861,
+        "count": 259,
+        "independent_documents": 24,
+        "ci": [
+          0.0,
+          0.012025301204819277
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.0,
         "upper": 0.1
       },
       {
-        "confidence": 1.0,
-        "accuracy": 0.9615384615384616,
-        "count": 26,
+        "confidence": 0.12731184383424912,
+        "accuracy": 1.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.1,
+        "upper": 0.2
+      },
+      {
+        "confidence": 0.31735966986750674,
+        "accuracy": 0.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0,
+          0.7934506856227534
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.8038001853686243,
+        "accuracy": 0.6666666666666666,
+        "count": 6,
+        "independent_documents": 6,
+        "ci": [
+          0.3333333333333333,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.9960074038045301,
+        "accuracy": 0.990990990990991,
+        "count": 333,
+        "independent_documents": 24,
+        "ci": [
+          0.9817043584953014,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -510,23 +1759,327 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   {
     "field": "total",
     "backend": "tokens",
-    "n": 43,
+    "n": 600,
     "split": "test",
+    "population": "generated",
+    "independent_documents": 24,
+    "scope": "clean_and_degraded",
     "fitted_on": "validation",
-    "ece_before": 0.06167063803759632,
-    "ece_after": 0.02275625215152649,
+    "ece_before": 0.046402585166396504,
+    "ece_after": 0.005803395423665318,
     "bins": [
       {
-        "confidence": 0.0012635974990800524,
-        "accuracy": 0.058823529411764705,
-        "count": 17,
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 190,
+        "independent_documents": 24,
+        "ci": [
+          0,
+          0.13797620467497365
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
         "lower": 0.0,
         "upper": 0.1
       },
       {
+        "confidence": 0.25611498818034006,
+        "accuracy": 0.0,
+        "count": 2,
+        "independent_documents": 2,
+        "ci": [
+          0,
+          0.6576197724933345
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.36777835781729323,
+        "accuracy": 0.3076923076923077,
+        "count": 26,
+        "independent_documents": 16,
+        "ci": [
+          0.07692307692307693,
+          0.5416666666666666
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.42933333333333334,
+        "accuracy": 0.4,
+        "count": 25,
+        "independent_documents": 18,
+        "ci": [
+          0.2,
+          0.625
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.4,
+        "upper": 0.5
+      },
+      {
+        "confidence": 0.5111845367127816,
+        "accuracy": 1.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.5,
+        "upper": 0.6
+      },
+      {
+        "confidence": 0.8679475699393466,
+        "accuracy": 0.8620689655172413,
+        "count": 29,
+        "independent_documents": 17,
+        "ci": [
+          0.675,
+          1.0
+        ],
+        "interval_method": "95% parent-document cluster bootstrap, 500 replicates",
+        "lower": 0.8,
+        "upper": 0.9
+      },
+      {
+        "confidence": 0.999954306881568,
+        "accuracy": 1.0,
+        "count": 327,
+        "independent_documents": 24,
+        "ci": [
+          0.8620237953250264,
+          1
+        ],
+        "interval_method": "95% Wilson bound using independent parent count for an all-equal bin",
+        "lower": 0.9,
+        "upper": 1.0
+      }
+    ]
+  },
+  {
+    "field": "subtotal",
+    "backend": "tokens",
+    "n": 65,
+    "split": "test",
+    "population": "cord",
+    "independent_documents": 65,
+    "scope": "original",
+    "fitted_on": "validation",
+    "ece_before": 0.06908230632882356,
+    "ece_after": 0.07999999999999999,
+    "bins": [
+      {
+        "confidence": 0.0,
+        "accuracy": 0.06382978723404255,
+        "count": 47,
+        "independent_documents": 47,
+        "ci": [
+          0.02194538520543382,
+          0.17162614183124045
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.3333333333333333,
+        "accuracy": 0.5555555555555556,
+        "count": 9,
+        "independent_documents": 9,
+        "ci": [
+          0.266651293495499,
+          0.8112214789023309
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.911111111111111,
+        "accuracy": 0.8888888888888888,
+        "count": 9,
+        "independent_documents": 9,
+        "ci": [
+          0.5650002944233536,
+          0.9801091123614543
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.9,
+        "upper": 1.0
+      }
+    ]
+  },
+  {
+    "field": "tax",
+    "backend": "tokens",
+    "n": 40,
+    "split": "test",
+    "population": "cord",
+    "independent_documents": 40,
+    "scope": "original",
+    "fitted_on": "validation",
+    "ece_before": 0.08423866238453857,
+    "ece_after": 0.11818488300984238,
+    "bins": [
+      {
+        "confidence": 0.0,
+        "accuracy": 0.0,
+        "count": 25,
+        "independent_documents": 25,
+        "ci": [
+          0,
+          0.13319225093904213
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.25446006845039193,
+        "accuracy": 0.5555555555555556,
+        "count": 9,
+        "independent_documents": 9,
+        "ci": [
+          0.266651293495499,
+          0.8112214789023309
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.3912320317763885,
+        "accuracy": 1.0,
+        "count": 2,
+        "independent_documents": 2,
+        "ci": [
+          0.34238022750666547,
+          1
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.4000000000000001,
+        "accuracy": 0.6666666666666666,
+        "count": 3,
+        "independent_documents": 3,
+        "ci": [
+          0.20765960080205476,
+          0.9385080552796012
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.4,
+        "upper": 0.5
+      },
+      {
         "confidence": 1.0,
         "accuracy": 1.0,
-        "count": 26,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.9,
+        "upper": 1.0
+      }
+    ]
+  },
+  {
+    "field": "total",
+    "backend": "tokens",
+    "n": 95,
+    "split": "test",
+    "population": "cord",
+    "independent_documents": 95,
+    "scope": "original",
+    "fitted_on": "validation",
+    "ece_before": 0.06426800231955565,
+    "ece_after": 0.044253725068694516,
+    "bins": [
+      {
+        "confidence": 0.0,
+        "accuracy": 0.016129032258064516,
+        "count": 62,
+        "independent_documents": 62,
+        "ci": [
+          0.002852867168621931,
+          0.08586720260689688
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      {
+        "confidence": 0.25,
+        "accuracy": 1.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.2,
+        "upper": 0.3
+      },
+      {
+        "confidence": 0.3979084398616035,
+        "accuracy": 1.0,
+        "count": 1,
+        "independent_documents": 1,
+        "ci": [
+          0.20654931437724644,
+          0.9999999999999999
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.3,
+        "upper": 0.4
+      },
+      {
+        "confidence": 0.6158292259075477,
+        "accuracy": 0.5,
+        "count": 6,
+        "independent_documents": 6,
+        "ci": [
+          0.18761630648265576,
+          0.8123836935173443
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.6,
+        "upper": 0.7
+      },
+      {
+        "confidence": 0.769629620742787,
+        "accuracy": 0.75,
+        "count": 8,
+        "independent_documents": 8,
+        "ci": [
+          0.40927543031017727,
+          0.9285207872478887
+        ],
+        "interval_method": "95% Wilson score interval",
+        "lower": 0.7,
+        "upper": 0.8
+      },
+      {
+        "confidence": 1.0,
+        "accuracy": 0.9411764705882353,
+        "count": 17,
+        "independent_documents": 17,
+        "ci": [
+          0.7301796936242538,
+          0.9895395990150021
+        ],
+        "interval_method": "95% Wilson score interval",
         "lower": 0.9,
         "upper": 1.0
       }
@@ -562,7 +2115,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     [
       0,
       0,
-      20,
+      100,
       0
     ],
     [
@@ -573,15 +2126,15 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     ]
   ],
   "accuracy": {
-    "value": 0.9285714285714286,
+    "value": 0.9705882352941176,
     "ci": [
-      0.8571428571428571,
-      0.9821428571428571
+      0.9411764705882353,
+      0.9926470588235294
     ],
-    "n": 56,
+    "n": 136,
     "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
   },
-  "n": 56,
+  "n": 136,
   "split": "test",
   "report": {
     "invoice": {
@@ -600,7 +2153,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
       "precision": 1.0,
       "recall": 1.0,
       "f1-score": 1.0,
-      "support": 20.0
+      "support": 100.0
     },
     "other": {
       "precision": 1.0,
@@ -608,18 +2161,18 @@ Every quantitative section below is rendered verbatim from the evidence manifest
       "f1-score": 1.0,
       "support": 12.0
     },
-    "accuracy": 0.9285714285714286,
+    "accuracy": 0.9705882352941176,
     "macro avg": {
       "precision": 0.9444444444444444,
       "recall": 0.9,
       "f1-score": 0.90625,
-      "support": 56.0
+      "support": 136.0
     },
     "weighted avg": {
-      "precision": 0.9444444444444444,
-      "recall": 0.9285714285714286,
-      "f1-score": 0.9241071428571429,
-      "support": 56.0
+      "precision": 0.9771241830065359,
+      "recall": 0.9705882352941176,
+      "f1-score": 0.96875,
+      "support": 136.0
     }
   },
   "population": "Generated invoice/PO images, public CORD receipt images and synthetic letter tokens"
@@ -656,7 +2209,13 @@ Every quantitative section below is rendered verbatim from the evidence manifest
       "method": "95% Wilson score interval"
     },
     "fired": 3,
-    "expected": 2
+    "expected": 2,
+    "tp": 2,
+    "fp": 1,
+    "fn": 0,
+    "tn": 21,
+    "truth": "Injected business defects, including PO amount mismatch caused by wrong total",
+    "not_evaluable": 0
   },
   {
     "id": "currency",
@@ -665,25 +2224,31 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "source": "generated",
     "split": "test",
     "precision": {
-      "value": null,
+      "value": 1.0,
       "ci": [
-        null,
-        null
+        0.34238022750666547,
+        1
       ],
-      "n": 0,
-      "reason": "Rule did not fire"
+      "n": 2,
+      "method": "95% Wilson score interval"
     },
     "recall": {
-      "value": null,
+      "value": 1.0,
       "ci": [
-        null,
-        null
+        0.34238022750666547,
+        1
       ],
-      "n": 0,
-      "reason": "No planted defects for this rule"
+      "n": 2,
+      "method": "95% Wilson score interval"
     },
-    "fired": 0,
-    "expected": 0
+    "fired": 2,
+    "expected": 2,
+    "tp": 2,
+    "fp": 0,
+    "fn": 0,
+    "tn": 22,
+    "truth": "Injected business defects, including PO amount mismatch caused by wrong total",
+    "not_evaluable": 0
   },
   {
     "id": "dates",
@@ -710,7 +2275,13 @@ Every quantitative section below is rendered verbatim from the evidence manifest
       "method": "95% Wilson score interval"
     },
     "fired": 2,
-    "expected": 2
+    "expected": 2,
+    "tp": 2,
+    "fp": 0,
+    "fn": 0,
+    "tn": 22,
+    "truth": "Injected business defects, including PO amount mismatch caused by wrong total",
+    "not_evaluable": 0
   },
   {
     "id": "duplicate",
@@ -737,7 +2308,13 @@ Every quantitative section below is rendered verbatim from the evidence manifest
       "method": "95% Wilson score interval"
     },
     "fired": 2,
-    "expected": 2
+    "expected": 2,
+    "tp": 2,
+    "fp": 0,
+    "fn": 0,
+    "tn": 22,
+    "truth": "Injected business defects, including PO amount mismatch caused by wrong total",
+    "not_evaluable": 0
   },
   {
     "id": "purchase_order",
@@ -764,7 +2341,13 @@ Every quantitative section below is rendered verbatim from the evidence manifest
       "method": "95% Wilson score interval"
     },
     "fired": 4,
-    "expected": 4
+    "expected": 4,
+    "tp": 4,
+    "fp": 0,
+    "fn": 0,
+    "tn": 20,
+    "truth": "Injected business defects, including PO amount mismatch caused by wrong total",
+    "not_evaluable": 0
   },
   {
     "id": "vendor",
@@ -791,9 +2374,97 @@ Every quantitative section below is rendered verbatim from the evidence manifest
       "method": "95% Wilson score interval"
     },
     "fired": 2,
-    "expected": 2
+    "expected": 2,
+    "tp": 2,
+    "fp": 0,
+    "fn": 0,
+    "tn": 22,
+    "truth": "Injected business defects, including PO amount mismatch caused by wrong total",
+    "not_evaluable": 0
   }
 ]
+```
+
+
+## Degradation Policy
+
+```json
+{
+  "field_f1_floor": 0.8,
+  "levels_per_type": 5,
+  "parameters": {
+    "skew": {
+      "levels": [
+        0,
+        1.5,
+        3,
+        5,
+        7
+      ],
+      "unit": "degrees",
+      "severe_direction": "increasing"
+    },
+    "blur": {
+      "levels": [
+        0,
+        0.5,
+        1,
+        1.75,
+        2.5
+      ],
+      "unit": "Gaussian radius in pixels",
+      "severe_direction": "increasing"
+    },
+    "noise": {
+      "levels": [
+        0,
+        10,
+        20,
+        30,
+        40
+      ],
+      "unit": "Gaussian RGB standard deviation",
+      "severe_direction": "increasing"
+    },
+    "jpeg": {
+      "levels": [
+        95,
+        60,
+        35,
+        18,
+        8
+      ],
+      "unit": "JPEG quality",
+      "severe_direction": "decreasing"
+    },
+    "downscale": {
+      "levels": [
+        1,
+        0.75,
+        0.5,
+        0.35,
+        0.22
+      ],
+      "unit": "resolution factor",
+      "severe_direction": "decreasing"
+    },
+    "photograph": {
+      "levels": [
+        0,
+        0.35,
+        0.7,
+        1.1,
+        1.5
+      ],
+      "unit": "perspective and lighting severity",
+      "severe_direction": "increasing"
+    }
+  },
+  "source": "generated",
+  "split": "test",
+  "independent_documents_per_level": 24,
+  "protocol": "All 24 generated test parents at each preselected severity; no level tuning on test"
+}
 ```
 
 
@@ -805,23 +2476,24 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "blur",
     "level": 0,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 0,
     "field_f1": {
       "value": 1.0,
       "ci": [
         1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.08916308626244433,
+      "value": 0.11172526036216562,
       "ci": [
-        0.01766409475026476,
-        0.17162829647164396
+        0.07093140142917516,
+        0.1494619252079477
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -830,7 +2502,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-blur-0.png",
@@ -840,23 +2512,24 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "blur",
     "level": 0,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 0,
     "field_f1": {
       "value": 1.0,
       "ci": [
         1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.08916308626244433,
+      "value": 0.11172526036216562,
       "ci": [
-        0.01766409475026476,
-        0.17162829647164396
+        0.07093140142917516,
+        0.1494619252079477
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -865,7 +2538,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-blur-0.png",
@@ -873,34 +2546,107 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   },
   {
     "kind": "blur",
-    "level": 1,
+    "level": 0.5,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 1,
     "field_f1": {
-      "value": 0.9722222222222222,
+      "value": 1.0,
       "ci": [
-        0.9166666666666666,
+        1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.03777511705005728,
+      "value": 0.11367774989550368,
       "ci": [
-        0.024754335588955557,
-        0.056964461154045506
+        0.0737318051216388,
+        0.15025099855052856
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
-      "value": 0.75,
+      "value": 1.0,
       "ci": [
-        0.25,
+        1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-blur-0.5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "blur",
+    "level": 0.5,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11367774989550368,
+      "ci": [
+        0.0737318051216388,
+        0.15025099855052856
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-blur-0.5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "blur",
+    "level": 1,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 2,
+    "field_f1": {
+      "value": 0.9583333333333334,
+      "ci": [
+        0.9305555555555555,
+        0.9814814814814815
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.04213366006729815,
+      "ci": [
+        0.03623336887995873,
+        0.04845197072487765
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.6666666666666666,
+      "ci": [
+        0.4583333333333333,
+        0.8552083333333325
+      ],
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-blur-1.png",
@@ -910,32 +2656,33 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "blur",
     "level": 1,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 2,
     "field_f1": {
-      "value": 0.9558823529411764,
+      "value": 0.9534313725490197,
       "ci": [
-        0.9411764705882353,
-        0.9852941176470589
+        0.9338235294117646,
+        0.9705882352941178
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.03777511705005728,
+      "value": 0.04213366006729815,
       "ci": [
-        0.024754335588955557,
-        0.056964461154045506
+        0.03623336887995873,
+        0.04845197072487765
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
-      "value": 0.25,
+      "value": 0.375,
       "ci": [
-        0.0,
-        0.75
+        0.16666666666666666,
+        0.5416666666666666
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-blur-1.png",
@@ -943,25 +2690,26 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   },
   {
     "kind": "blur",
-    "level": 2.5,
+    "level": 1.75,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 3,
     "field_f1": {
-      "value": 0.0,
+      "value": 0.3205450799200799,
       "ci": [
-        0.0,
-        0.0
+        0.250905414030414,
+        0.3982122825091574
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.7957540397041485,
+      "value": 0.394522112445266,
       "ci": [
-        0.7748654606756143,
-        0.8231973357469423
+        0.3230150717999835,
+        0.47368049861256006
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -970,7 +2718,79 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         0.0,
         0.0
       ],
-      "n": 4,
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-blur-1.75.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "blur",
+    "level": 1.75,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.5050376706626707,
+      "ci": [
+        0.41712845314407815,
+        0.5906226672632923
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.394522112445266,
+      "ci": [
+        0.3230150717999835,
+        0.47368049861256006
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-blur-1.75.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "blur",
+    "level": 2.5,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 4,
+    "field_f1": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.7697266466356162,
+      "ci": [
+        0.747554090796762,
+        0.7903055736118869
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-blur-2.5.png",
@@ -980,23 +2800,24 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "blur",
     "level": 2.5,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 4,
     "field_f1": {
       "value": 0.0,
       "ci": [
         0.0,
         0.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.7957540397041485,
+      "value": 0.7697266466356162,
       "ci": [
-        0.7748654606756143,
-        0.8231973357469423
+        0.747554090796762,
+        0.7903055736118869
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -1005,7 +2826,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         0.0,
         0.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-blur-2.5.png",
@@ -1015,23 +2836,24 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "downscale",
     "level": 0.22,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 4,
     "field_f1": {
-      "value": 0.05,
+      "value": 0.03333333333333333,
       "ci": [
-        0.0,
-        0.15000000000000002
+        0.008333333333333333,
+        0.06666666666666667
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.8139958457783746,
+      "value": 0.7885758918945731,
       "ci": [
-        0.7591891356066613,
-        0.895623403349418
+        0.7721984181983138,
+        0.8079976587147145
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -1040,7 +2862,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         0.0,
         0.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-downscale-0.22.png",
@@ -1050,23 +2872,24 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "downscale",
     "level": 0.22,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 4,
     "field_f1": {
-      "value": 0.05,
+      "value": 0.05833333333333334,
       "ci": [
-        0.0,
-        0.15000000000000002
+        0.025000000000000005,
+        0.09604166666666647
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.8139958457783746,
+      "value": 0.7885758918945731,
       "ci": [
-        0.7591891356066613,
-        0.895623403349418
+        0.7721984181983138,
+        0.8079976587147145
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -1075,523 +2898,970 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         0.0,
         0.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-downscale-0.22.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "downscale",
+    "level": 0.35,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.23908313908313908,
+      "ci": [
+        0.1909319153069153,
+        0.28286120129870124
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.4495739606735653,
+      "ci": [
+        0.4141626644496632,
+        0.482500241784995
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-downscale-0.35.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "downscale",
+    "level": 0.35,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.2439047064047064,
+      "ci": [
+        0.19247082778332777,
+        0.2890404387279387
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.4495739606735653,
+      "ci": [
+        0.4141626644496632,
+        0.482500241784995
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-downscale-0.35.png",
     "document_id": "gen-0072"
   },
   {
     "kind": "downscale",
     "level": 0.5,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 2,
     "field_f1": {
-      "value": 0.8333333333333333,
+      "value": 0.8663671023965142,
+      "ci": [
+        0.8116397739651415,
+        0.9178880718954248
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.06926155109723625,
+      "ci": [
+        0.05818316686294126,
+        0.08234498722378349
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.3333333333333333,
+      "ci": [
+        0.16666666666666666,
+        0.5
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-downscale-0.5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "downscale",
+    "level": 0.5,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 2,
+    "field_f1": {
+      "value": 0.8532135076252724,
+      "ci": [
+        0.7920683551198258,
+        0.9045955882352941
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.06926155109723625,
+      "ci": [
+        0.05818316686294126,
+        0.08234498722378349
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.375,
+      "ci": [
+        0.16666666666666666,
+        0.5833333333333334
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-downscale-0.5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "downscale",
+    "level": 0.75,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 0.9697712418300654,
+      "ci": [
+        0.9489311002178649,
+        0.9904684095860566
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.04137553551042812,
+      "ci": [
+        0.03362221196298009,
+        0.04952764050060606
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.7083333333333334,
+      "ci": [
+        0.5197916666666667,
+        0.875
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-downscale-0.75.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "downscale",
+    "level": 0.75,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 0.982843137254902,
+      "ci": [
+        0.9705882352941178,
+        0.9926470588235294
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.04137553551042812,
+      "ci": [
+        0.03362221196298009,
+        0.04952764050060606
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.7083333333333334,
+      "ci": [
+        0.5,
+        0.875
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-downscale-0.75.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "downscale",
+    "level": 1,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 0,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11172526036216562,
+      "ci": [
+        0.07093140142917516,
+        0.1494619252079477
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-downscale-1.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "downscale",
+    "level": 1,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 0,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11172526036216562,
+      "ci": [
+        0.07093140142917516,
+        0.1494619252079477
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-downscale-1.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 8,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 4,
+    "field_f1": {
+      "value": 0.8658710706504825,
+      "ci": [
+        0.7942073461328977,
+        0.9297062227668844
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11048466414956148,
+      "ci": [
+        0.0708921751140794,
+        0.15219620743929652
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.375,
+      "ci": [
+        0.20833333333333334,
+        0.5833333333333334
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-8.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 8,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 4,
+    "field_f1": {
+      "value": 0.8789556100217865,
+      "ci": [
+        0.826885042211329,
+        0.9254093477668844
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11048466414956148,
+      "ci": [
+        0.0708921751140794,
+        0.15219620743929652
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.4166666666666667,
+      "ci": [
+        0.25,
+        0.625
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-8.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 18,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.9929193899782135,
+      "ci": [
+        0.982386982570806,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.08877276531339177,
+      "ci": [
+        0.05380467056078251,
+        0.12708615858451716
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.9166666666666666,
+      "ci": [
+        0.7916666666666666,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-18.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 18,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.9950980392156863,
+      "ci": [
+        0.9877450980392157,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.08877276531339177,
+      "ci": [
+        0.05380467056078251,
+        0.12708615858451716
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.9166666666666666,
+      "ci": [
+        0.7916666666666666,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-18.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 35,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 2,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.07446134589704308,
+      "ci": [
+        0.03965469097988561,
+        0.1140625842391111
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-35.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 35,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 2,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.07446134589704308,
+      "ci": [
+        0.03965469097988561,
+        0.1140625842391111
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-35.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 60,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 0.9929193899782135,
+      "ci": [
+        0.9833877995642702,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.09426408241224472,
+      "ci": [
+        0.05914846960864255,
+        0.13076986599517915
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.9166666666666666,
+      "ci": [
+        0.7916666666666666,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-60.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 60,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 0.9975490196078431,
+      "ci": [
+        0.9926470588235294,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.09426408241224472,
+      "ci": [
+        0.05914846960864255,
+        0.13076986599517915
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.9583333333333334,
+      "ci": [
+        0.875,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-60.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 95,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 0,
+    "field_f1": {
+      "value": 0.9861111111111112,
+      "ci": [
+        0.9722222222222222,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.12328750132379133,
+      "ci": [
+        0.07982858854275884,
+        0.1650602124625233
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.875,
+      "ci": [
+        0.75,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-95.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "jpeg",
+    "level": 95,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 0,
+    "field_f1": {
+      "value": 0.9929193899782135,
+      "ci": [
+        0.9822576252723312,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.12328750132379133,
+      "ci": [
+        0.07982858854275884,
+        0.1650602124625233
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.9166666666666666,
+      "ci": [
+        0.7916666666666666,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-jpeg-95.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "noise",
+    "level": 0,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 0,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11172526036216562,
+      "ci": [
+        0.07093140142917516,
+        0.1494619252079477
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-noise-0.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "noise",
+    "level": 0,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 0,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11172526036216562,
+      "ci": [
+        0.07093140142917516,
+        0.1494619252079477
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-noise-0.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "noise",
+    "level": 10,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 0.9790305010893245,
+      "ci": [
+        0.9557393790849673,
+        0.9975490196078431
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.09467030021250682,
+      "ci": [
+        0.05914790753117162,
+        0.13066183266398662
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.8333333333333334,
       "ci": [
         0.6666666666666666,
-        1.0
+        0.9583333333333334
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
-    "cer": {
-      "value": 0.07008781904492695,
-      "ci": [
-        0.050316399390408995,
-        0.09583837284308983
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 0.5,
-      "ci": [
-        0.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-downscale-0.5.png",
+    "image": "/data/images/gen-0072-noise-10.png",
     "document_id": "gen-0072"
   },
   {
-    "kind": "downscale",
-    "level": 0.5,
+    "kind": "noise",
+    "level": 10,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 1,
     "field_f1": {
-      "value": 0.815359477124183,
+      "value": 0.9809368191721134,
       "ci": [
-        0.630718954248366,
-        1.0
+        0.9613153594771242,
+        0.9975490196078431
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.07008781904492695,
+      "value": 0.09467030021250682,
       "ci": [
-        0.050316399390408995,
-        0.09583837284308983
+        0.05914790753117162,
+        0.13066183266398662
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
-      "value": 0.5,
+      "value": 0.8333333333333334,
       "ci": [
-        0.0,
-        1.0
+        0.6666666666666666,
+        0.9583333333333334
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
-    "image": "/data/images/gen-0072-downscale-0.5.png",
+    "image": "/data/images/gen-0072-noise-10.png",
     "document_id": "gen-0072"
   },
   {
-    "kind": "downscale",
-    "level": 1,
+    "kind": "noise",
+    "level": 20,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 2,
     "field_f1": {
-      "value": 1.0,
+      "value": 0.9814814814814815,
       "ci": [
-        1.0,
-        1.0
+        0.962962962962963,
+        0.9953703703703703
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.08916308626244433,
+      "value": 0.07740166247839218,
       "ci": [
-        0.01766409475026476,
-        0.17162829647164396
+        0.04206698819929767,
+        0.1169347647336653
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
-      "value": 1.0,
+      "value": 0.8333333333333334,
       "ci": [
-        1.0,
-        1.0
+        0.6666666666666666,
+        0.9583333333333334
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
-    "image": "/data/images/gen-0072-downscale-1.png",
+    "image": "/data/images/gen-0072-noise-20.png",
     "document_id": "gen-0072"
   },
   {
-    "kind": "downscale",
-    "level": 1,
+    "kind": "noise",
+    "level": 20,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 2,
     "field_f1": {
-      "value": 1.0,
+      "value": 0.9880174291938998,
       "ci": [
-        1.0,
-        1.0
+        0.9764365468409586,
+        0.9975490196078431
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.08916308626244433,
+      "value": 0.07740166247839218,
       "ci": [
-        0.01766409475026476,
-        0.17162829647164396
+        0.04206698819929767,
+        0.1169347647336653
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
-      "value": 1.0,
+      "value": 0.8333333333333334,
       "ci": [
-        1.0,
-        1.0
+        0.6666666666666666,
+        0.9583333333333334
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
-    "image": "/data/images/gen-0072-downscale-1.png",
+    "image": "/data/images/gen-0072-noise-20.png",
     "document_id": "gen-0072"
   },
   {
-    "kind": "jpeg",
-    "level": 8,
+    "kind": "noise",
+    "level": 30,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 3,
     "field_f1": {
-      "value": 0.895016339869281,
+      "value": 0.2569444444444444,
       "ci": [
-        0.7977941176470589,
-        0.9852941176470589
+        0.09027777777777778,
+        0.43420138888888876
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.10825321584485578,
+      "value": 1.9312786803634718,
       "ci": [
-        0.03986362359247012,
-        0.21527922826398074
+        1.393846832120819,
+        2.490667577856866
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
       "value": 0.25,
       "ci": [
-        0.0,
-        0.75
+        0.08333333333333333,
+        0.4166666666666667
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
-    "image": "/data/images/gen-0072-jpeg-8.png",
+    "image": "/data/images/gen-0072-noise-30.png",
     "document_id": "gen-0072"
   },
   {
-    "kind": "jpeg",
-    "level": 8,
+    "kind": "noise",
+    "level": 30,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 3,
     "field_f1": {
-      "value": 0.8944444444444444,
+      "value": 0.25,
       "ci": [
-        0.8222222222222223,
-        0.9722222222222222
+        0.08333333333333333,
+        0.4166666666666667
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.10825321584485578,
+      "value": 1.9312786803634718,
       "ci": [
-        0.03986362359247012,
-        0.21527922826398074
+        1.393846832120819,
+        2.490667577856866
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
       "value": 0.25,
       "ci": [
-        0.0,
-        0.75
+        0.08333333333333333,
+        0.4166666666666667
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
-    "image": "/data/images/gen-0072-jpeg-8.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "jpeg",
-    "level": 35,
-    "backend": "rules",
-    "n": 4,
-    "field_f1": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.0699366275791347,
-      "ci": [
-        0.01625544267053701,
-        0.17484212728725226
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-jpeg-35.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "jpeg",
-    "level": 35,
-    "backend": "tokens",
-    "n": 4,
-    "field_f1": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.0699366275791347,
-      "ci": [
-        0.01625544267053701,
-        0.17484212728725226
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-jpeg-35.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "jpeg",
-    "level": 95,
-    "backend": "rules",
-    "n": 4,
-    "field_f1": {
-      "value": 0.9722222222222222,
-      "ci": [
-        0.9166666666666666,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.12030033310279538,
-      "ci": [
-        0.016564006138018977,
-        0.22396749929037751
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 0.75,
-      "ci": [
-        0.25,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-jpeg-95.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "jpeg",
-    "level": 95,
-    "backend": "tokens",
-    "n": 4,
-    "field_f1": {
-      "value": 0.9852941176470589,
-      "ci": [
-        0.9558823529411764,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.12030033310279538,
-      "ci": [
-        0.016564006138018977,
-        0.22396749929037751
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 0.75,
-      "ci": [
-        0.25,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-jpeg-95.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "noise",
-    "level": 0,
-    "backend": "rules",
-    "n": 4,
-    "field_f1": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.08916308626244433,
-      "ci": [
-        0.01766409475026476,
-        0.17162829647164396
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-noise-0.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "noise",
-    "level": 0,
-    "backend": "tokens",
-    "n": 4,
-    "field_f1": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.08916308626244433,
-      "ci": [
-        0.01766409475026476,
-        0.17162829647164396
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-noise-0.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "noise",
-    "level": 15,
-    "backend": "rules",
-    "n": 4,
-    "field_f1": {
-      "value": 0.957516339869281,
-      "ci": [
-        0.9150326797385622,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.07511231195571723,
-      "ci": [
-        0.018893735130848535,
-        0.1860807550383196
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 0.75,
-      "ci": [
-        0.25,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-noise-15.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "noise",
-    "level": 15,
-    "backend": "tokens",
-    "n": 4,
-    "field_f1": {
-      "value": 0.9444444444444444,
-      "ci": [
-        0.8888888888888888,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.07511231195571723,
-      "ci": [
-        0.018893735130848535,
-        0.1860807550383196
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 0.75,
-      "ci": [
-        0.25,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-noise-15.png",
+    "image": "/data/images/gen-0072-noise-30.png",
     "document_id": "gen-0072"
   },
   {
     "kind": "noise",
     "level": 40,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 4,
     "field_f1": {
-      "value": 0.08012820512820512,
+      "value": 0.040695415695415696,
       "ci": [
-        0.0,
-        0.16025641025641024
+        0.012820512820512822,
+        0.0747219794094794
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 2.3702621064073672,
+      "value": 2.6121817426654257,
       "ci": [
-        0.9534979267318446,
-        4.267509163725519
+        1.9964054762053056,
+        3.2459072277400964
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -1600,7 +3870,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         0.0,
         0.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-noise-40.png",
@@ -1610,23 +3880,24 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "noise",
     "level": 40,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 4,
     "field_f1": {
-      "value": 0.09090909090909091,
+      "value": 0.06363636363636364,
       "ci": [
-        0.0,
-        0.18181818181818182
+        0.024242424242424242,
+        0.1053030303030303
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 2.3702621064073672,
+      "value": 2.6121817426654257,
       "ci": [
-        0.9534979267318446,
-        4.267509163725519
+        1.9964054762053056,
+        3.2459072277400964
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -1635,7 +3906,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         0.0,
         0.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-noise-40.png",
@@ -1645,23 +3916,24 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "photograph",
     "level": 0,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 0,
     "field_f1": {
       "value": 1.0,
       "ci": [
         1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.08916308626244433,
+      "value": 0.11172526036216562,
       "ci": [
-        0.01766409475026476,
-        0.17162829647164396
+        0.07093140142917516,
+        0.1494619252079477
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -1670,7 +3942,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-photograph-0.png",
@@ -1680,23 +3952,24 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "photograph",
     "level": 0,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 0,
     "field_f1": {
       "value": 1.0,
       "ci": [
         1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.08916308626244433,
+      "value": 0.11172526036216562,
       "ci": [
-        0.01766409475026476,
-        0.17162829647164396
+        0.07093140142917516,
+        0.1494619252079477
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -1705,7 +3978,7 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         1.0,
         1.0
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-photograph-0.png",
@@ -1713,34 +3986,107 @@ Every quantitative section below is rendered verbatim from the evidence manifest
   },
   {
     "kind": "photograph",
-    "level": 0.7,
+    "level": 0.35,
     "backend": "rules",
-    "n": 4,
+    "n": 24,
+    "level_index": 1,
     "field_f1": {
-      "value": 0.5098039215686274,
+      "value": 0.9697712418300654,
       "ci": [
-        0.38095238095238093,
-        0.6386554621848739
+        0.949074074074074,
+        0.988289760348584
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.33079799184399006,
+      "value": 0.02542238385781695,
       "ci": [
-        0.16908607765322936,
-        0.4615929817605075
+        0.022680027016377186,
+        0.028411878950190626
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
-      "value": 0.0,
+      "value": 0.7083333333333334,
+      "ci": [
+        0.5,
+        0.875
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-photograph-0.35.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "photograph",
+    "level": 0.35,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.02542238385781695,
+      "ci": [
+        0.022680027016377186,
+        0.028411878950190626
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-photograph-0.35.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "photograph",
+    "level": 0.7,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 2,
+    "field_f1": {
+      "value": 0.5684366695396107,
+      "ci": [
+        0.48102757128492424,
+        0.6553310506895065
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.3047774441905129,
+      "ci": [
+        0.2357441340424431,
+        0.36887969800759096
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.125,
       "ci": [
         0.0,
-        0.0
+        0.25
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-photograph-0.7.png",
@@ -1750,303 +4096,60 @@ Every quantitative section below is rendered verbatim from the evidence manifest
     "kind": "photograph",
     "level": 0.7,
     "backend": "tokens",
-    "n": 4,
+    "n": 24,
+    "level_index": 2,
     "field_f1": {
-      "value": 0.5331196581196581,
+      "value": 0.5640593339122751,
       "ci": [
-        0.27884615384615385,
-        0.782051282051282
+        0.4441829351204351,
+        0.6864689980498803
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.33079799184399006,
+      "value": 0.3047774441905129,
       "ci": [
-        0.16908607765322936,
-        0.4615929817605075
+        0.2357441340424431,
+        0.36887969800759096
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
-      "value": 0.25,
+      "value": 0.16666666666666666,
       "ci": [
-        0.0,
-        0.75
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-photograph-0.7.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "photograph",
-    "level": 1.5,
-    "backend": "rules",
-    "n": 4,
-    "field_f1": {
-      "value": 0.46428571428571425,
-      "ci": [
-        0.42857142857142855,
-        0.5357142857142857
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.515147629711226,
-      "ci": [
-        0.4716538070846571,
-        0.5666082083534913
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 0.0,
-      "ci": [
-        0.0,
-        0.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-photograph-1.5.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "photograph",
-    "level": 1.5,
-    "backend": "tokens",
-    "n": 4,
-    "field_f1": {
-      "value": 0.34615384615384615,
-      "ci": [
-        0.3076923076923077,
-        0.42307692307692313
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.515147629711226,
-      "ci": [
-        0.4716538070846571,
-        0.5666082083534913
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 0.0,
-      "ci": [
-        0.0,
-        0.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-photograph-1.5.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "skew",
-    "level": 0,
-    "backend": "rules",
-    "n": 4,
-    "field_f1": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.08916308626244433,
-      "ci": [
-        0.01766409475026476,
-        0.17162829647164396
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-skew-0.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "skew",
-    "level": 0,
-    "backend": "tokens",
-    "n": 4,
-    "field_f1": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.08916308626244433,
-      "ci": [
-        0.01766409475026476,
-        0.17162829647164396
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-skew-0.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "skew",
-    "level": 3,
-    "backend": "rules",
-    "n": 4,
-    "field_f1": {
-      "value": 0.9411764705882353,
-      "ci": [
-        0.9411764705882353,
-        0.9411764705882353
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.3333084621535321,
-      "ci": [
-        0.250476560980354,
-        0.4161403633267101
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-skew-3.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "skew",
-    "level": 3,
-    "backend": "tokens",
-    "n": 4,
-    "field_f1": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.3333084621535321,
-      "ci": [
-        0.250476560980354,
-        0.4161403633267101
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 1.0,
-      "ci": [
-        1.0,
-        1.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-skew-3.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "skew",
-    "level": 7,
-    "backend": "rules",
-    "n": 4,
-    "field_f1": {
-      "value": 0.4697802197802198,
-      "ci": [
-        0.36813186813186816,
-        0.5714285714285714
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "cer": {
-      "value": 0.5025110936773636,
-      "ci": [
-        0.4814303313233482,
-        0.5268891132307549
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "document_success": {
-      "value": 0.0,
-      "ci": [
-        0.0,
-        0.0
-      ],
-      "n": 4,
-      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
-    },
-    "image": "/data/images/gen-0072-skew-7.png",
-    "document_id": "gen-0072"
-  },
-  {
-    "kind": "skew",
-    "level": 7,
-    "backend": "tokens",
-    "n": 4,
-    "field_f1": {
-      "value": 0.28525641025641024,
-      "ci": [
-        0.20833333333333331,
+        0.041666666666666664,
         0.3333333333333333
       ],
-      "n": 4,
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-photograph-0.7.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "photograph",
+    "level": 1.1,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.4474206349206349,
+      "ci": [
+        0.4136904761904762,
+        0.48214285714285715
+      ],
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "cer": {
-      "value": 0.5025110936773636,
+      "value": 0.44861619614758,
       "ci": [
-        0.4814303313233482,
-        0.5268891132307549
+        0.4376369515022286,
+        0.4598425821446761
       ],
-      "n": 4,
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "document_success": {
@@ -2055,11 +4158,571 @@ Every quantitative section below is rendered verbatim from the evidence manifest
         0.0,
         0.0
       ],
-      "n": 4,
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-photograph-1.1.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "photograph",
+    "level": 1.1,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.38097319347319347,
+      "ci": [
+        0.3437232905982906,
+        0.41641292735042734
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.44861619614758,
+      "ci": [
+        0.4376369515022286,
+        0.4598425821446761
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-photograph-1.1.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "photograph",
+    "level": 1.5,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 4,
+    "field_f1": {
+      "value": 0.4438339438339438,
+      "ci": [
+        0.4013450091575091,
+        0.48214285714285715
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.5123319123796465,
+      "ci": [
+        0.49494836455855423,
+        0.5308650552882728
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-photograph-1.5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "photograph",
+    "level": 1.5,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 4,
+    "field_f1": {
+      "value": 0.3564005439005438,
+      "ci": [
+        0.3203999125874126,
+        0.3929086538461538
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.5123319123796465,
+      "ci": [
+        0.49494836455855423,
+        0.5308650552882728
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-photograph-1.5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 0,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 0,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11172526036216562,
+      "ci": [
+        0.07093140142917516,
+        0.1494619252079477
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-0.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 0,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 0,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.11172526036216562,
+      "ci": [
+        0.07093140142917516,
+        0.1494619252079477
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-0.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 1.5,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.09586511333816772,
+      "ci": [
+        0.06290389225571172,
+        0.12972158223405425
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-1.5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 1.5,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 1,
+    "field_f1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.09586511333816772,
+      "ci": [
+        0.06290389225571172,
+        0.12972158223405425
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-1.5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 3,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 2,
+    "field_f1": {
+      "value": 0.9258578431372548,
+      "ci": [
+        0.9105392156862745,
+        0.9384191176470588
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.33678069600690064,
+      "ci": [
+        0.3018360723073863,
+        0.37104510075246583
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.8333333333333334,
+      "ci": [
+        0.6666666666666666,
+        0.9583333333333334
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-3.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 3,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 2,
+    "field_f1": {
+      "value": 0.9926470588235294,
+      "ci": [
+        0.982843137254902,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.33678069600690064,
+      "ci": [
+        0.3018360723073863,
+        0.37104510075246583
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.875,
+      "ci": [
+        0.7083333333333334,
+        1.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-3.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 5,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.7315972222222221,
+      "ci": [
+        0.6821093749999999,
+        0.7809027777777778
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.40887111503920553,
+      "ci": [
+        0.39239183396872696,
+        0.42526642414073923
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 5,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 3,
+    "field_f1": {
+      "value": 0.734375,
+      "ci": [
+        0.7032725694444444,
+        0.7623350694444443
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.40887111503920553,
+      "ci": [
+        0.39239183396872696,
+        0.42526642414073923
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-5.png",
+    "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 7,
+    "backend": "rules",
+    "n": 24,
+    "level_index": 4,
+    "field_f1": {
+      "value": 0.3528693528693528,
+      "ci": [
+        0.2990285409035409,
+        0.4049328449328449
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.49581332536722883,
+      "ci": [
+        0.48039736466490257,
+        0.5126818950280893
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
       "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
     },
     "image": "/data/images/gen-0072-skew-7.png",
     "document_id": "gen-0072"
+  },
+  {
+    "kind": "skew",
+    "level": 7,
+    "backend": "tokens",
+    "n": 24,
+    "level_index": 4,
+    "field_f1": {
+      "value": 0.32780414030414035,
+      "ci": [
+        0.2927634865134865,
+        0.36327023670773667
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "cer": {
+      "value": 0.49581332536722883,
+      "ci": [
+        0.48039736466490257,
+        0.5126818950280893
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "document_success": {
+      "value": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "n": 24,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "image": "/data/images/gen-0072-skew-7.png",
+    "document_id": "gen-0072"
+  }
+]
+```
+
+
+## Degradation Floors
+
+```json
+[
+  {
+    "kind": "blur",
+    "backend": "rules",
+    "floor": 0.8,
+    "first_below": 1.75,
+    "reason": null
+  },
+  {
+    "kind": "blur",
+    "backend": "tokens",
+    "floor": 0.8,
+    "first_below": 1.75,
+    "reason": null
+  },
+  {
+    "kind": "downscale",
+    "backend": "rules",
+    "floor": 0.8,
+    "first_below": 0.35,
+    "reason": null
+  },
+  {
+    "kind": "downscale",
+    "backend": "tokens",
+    "floor": 0.8,
+    "first_below": 0.35,
+    "reason": null
+  },
+  {
+    "kind": "jpeg",
+    "backend": "rules",
+    "floor": 0.8,
+    "first_below": null,
+    "reason": "No observed level fell below the floor"
+  },
+  {
+    "kind": "jpeg",
+    "backend": "tokens",
+    "floor": 0.8,
+    "first_below": null,
+    "reason": "No observed level fell below the floor"
+  },
+  {
+    "kind": "noise",
+    "backend": "rules",
+    "floor": 0.8,
+    "first_below": 30,
+    "reason": null
+  },
+  {
+    "kind": "noise",
+    "backend": "tokens",
+    "floor": 0.8,
+    "first_below": 30,
+    "reason": null
+  },
+  {
+    "kind": "photograph",
+    "backend": "rules",
+    "floor": 0.8,
+    "first_below": 0.7,
+    "reason": null
+  },
+  {
+    "kind": "photograph",
+    "backend": "tokens",
+    "floor": 0.8,
+    "first_below": 0.7,
+    "reason": null
+  },
+  {
+    "kind": "skew",
+    "backend": "rules",
+    "floor": 0.8,
+    "first_below": 5,
+    "reason": null
+  },
+  {
+    "kind": "skew",
+    "backend": "tokens",
+    "floor": 0.8,
+    "first_below": 5,
+    "reason": null
   }
 ]
 ```
@@ -2070,32 +4733,460 @@ Every quantitative section below is rendered verbatim from the evidence manifest
 ```json
 {
   "before": {
-    "value": 0.596969696969697,
+    "value": 0.4480555555555556,
     "ci": [
-      0.45454545454545453,
-      0.7373106060606059
+      0.3641111111111111,
+      0.5371458333333332
     ],
-    "n": 44,
+    "n": 120,
     "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
   },
   "after": {
-    "value": 0.596969696969697,
+    "value": 0.44388888888888894,
     "ci": [
-      0.45454545454545453,
-      0.7373106060606059
+      0.3584513888888889,
+      0.530875
     ],
-    "n": 44,
+    "n": 120,
     "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
   },
+  "excluded_without_reference": 4,
   "corrections_used": 8,
-  "n_test": 44,
+  "corrections_received": 8,
+  "corrections_without_trainable_spans": 0,
+  "human_corrections_used": 0,
+  "simulated_corrections_used": 8,
+  "correction_provenance": {
+    "simulated_ground_truth": 8
+  },
+  "human_count_definition": "Accepted reviews whose client declared human origin; reviewer identity is not verified.",
+  "correction_records": [
+    {
+      "document_id": "gen-0048",
+      "provenance": {
+        "kind": "simulated_ground_truth"
+      },
+      "matched_fields": [
+        "vendor",
+        "number",
+        "date",
+        "due_date",
+        "currency",
+        "po_number",
+        "subtotal",
+        "tax",
+        "total",
+        "row:0:description",
+        "row:0:quantity",
+        "row:0:unit_price",
+        "row:0:amount",
+        "row:1:description",
+        "row:1:quantity",
+        "row:1:unit_price",
+        "row:1:amount",
+        "row:2:description",
+        "row:2:quantity",
+        "row:2:unit_price",
+        "row:2:amount"
+      ],
+      "excluded_fields": [],
+      "labeled_tokens": 27,
+      "unreviewed_tokens_masked": 44
+    },
+    {
+      "document_id": "gen-0049",
+      "provenance": {
+        "kind": "simulated_ground_truth"
+      },
+      "matched_fields": [
+        "vendor",
+        "number",
+        "date",
+        "due_date",
+        "currency",
+        "po_number",
+        "subtotal",
+        "tax",
+        "total",
+        "row:0:description",
+        "row:0:quantity",
+        "row:1:description",
+        "row:1:quantity",
+        "row:1:unit_price",
+        "row:1:amount",
+        "row:2:description",
+        "row:2:quantity",
+        "row:2:unit_price",
+        "row:2:amount",
+        "row:3:description",
+        "row:3:quantity",
+        "row:3:unit_price",
+        "row:3:amount"
+      ],
+      "excluded_fields": [
+        "row:0:amount",
+        "row:0:unit_price"
+      ],
+      "labeled_tokens": 30,
+      "unreviewed_tokens_masked": 40
+    },
+    {
+      "document_id": "gen-0050",
+      "provenance": {
+        "kind": "simulated_ground_truth"
+      },
+      "matched_fields": [
+        "vendor",
+        "number",
+        "date",
+        "due_date",
+        "currency",
+        "po_number",
+        "subtotal",
+        "tax",
+        "total",
+        "row:0:description",
+        "row:0:quantity",
+        "row:0:unit_price",
+        "row:0:amount",
+        "row:1:description",
+        "row:1:quantity",
+        "row:1:unit_price",
+        "row:1:amount",
+        "row:2:description",
+        "row:2:quantity",
+        "row:2:unit_price",
+        "row:2:amount",
+        "row:3:description",
+        "row:3:quantity",
+        "row:3:unit_price",
+        "row:3:amount",
+        "row:4:description",
+        "row:4:quantity",
+        "row:4:unit_price",
+        "row:4:amount"
+      ],
+      "excluded_fields": [],
+      "labeled_tokens": 37,
+      "unreviewed_tokens_masked": 30
+    },
+    {
+      "document_id": "gen-0051",
+      "provenance": {
+        "kind": "simulated_ground_truth"
+      },
+      "matched_fields": [
+        "vendor",
+        "number",
+        "date",
+        "due_date",
+        "currency",
+        "po_number",
+        "subtotal",
+        "tax",
+        "total",
+        "row:0:description",
+        "row:0:quantity",
+        "row:0:unit_price",
+        "row:0:amount",
+        "row:1:description",
+        "row:1:quantity",
+        "row:1:unit_price",
+        "row:1:amount",
+        "row:2:description",
+        "row:2:quantity",
+        "row:2:unit_price",
+        "row:2:amount"
+      ],
+      "excluded_fields": [],
+      "labeled_tokens": 27,
+      "unreviewed_tokens_masked": 43
+    },
+    {
+      "document_id": "gen-0052",
+      "provenance": {
+        "kind": "simulated_ground_truth"
+      },
+      "matched_fields": [
+        "vendor",
+        "number",
+        "date",
+        "due_date",
+        "currency",
+        "po_number",
+        "subtotal",
+        "tax",
+        "total",
+        "row:0:description",
+        "row:0:quantity",
+        "row:0:unit_price",
+        "row:0:amount",
+        "row:1:description",
+        "row:1:quantity",
+        "row:1:unit_price",
+        "row:1:amount",
+        "row:2:description",
+        "row:2:quantity",
+        "row:2:unit_price",
+        "row:2:amount",
+        "row:3:description",
+        "row:3:quantity",
+        "row:3:unit_price",
+        "row:3:amount"
+      ],
+      "excluded_fields": [],
+      "labeled_tokens": 32,
+      "unreviewed_tokens_masked": 44
+    },
+    {
+      "document_id": "gen-0053",
+      "provenance": {
+        "kind": "simulated_ground_truth"
+      },
+      "matched_fields": [
+        "vendor",
+        "number",
+        "date",
+        "due_date",
+        "currency",
+        "po_number",
+        "subtotal",
+        "tax",
+        "total",
+        "row:0:description",
+        "row:0:quantity",
+        "row:0:unit_price",
+        "row:0:amount",
+        "row:1:description",
+        "row:1:quantity",
+        "row:1:unit_price",
+        "row:1:amount",
+        "row:2:description",
+        "row:2:quantity",
+        "row:2:unit_price",
+        "row:2:amount",
+        "row:3:description",
+        "row:3:quantity",
+        "row:3:unit_price",
+        "row:3:amount",
+        "row:4:description",
+        "row:4:quantity",
+        "row:4:unit_price",
+        "row:4:amount"
+      ],
+      "excluded_fields": [],
+      "labeled_tokens": 37,
+      "unreviewed_tokens_masked": 30
+    },
+    {
+      "document_id": "gen-0054",
+      "provenance": {
+        "kind": "simulated_ground_truth"
+      },
+      "matched_fields": [
+        "vendor",
+        "number",
+        "date",
+        "due_date",
+        "currency",
+        "po_number",
+        "subtotal",
+        "tax",
+        "total",
+        "row:0:description",
+        "row:0:quantity",
+        "row:0:unit_price",
+        "row:0:amount",
+        "row:1:description",
+        "row:1:quantity",
+        "row:1:unit_price",
+        "row:1:amount",
+        "row:2:description",
+        "row:2:quantity",
+        "row:2:unit_price",
+        "row:2:amount"
+      ],
+      "excluded_fields": [],
+      "labeled_tokens": 25,
+      "unreviewed_tokens_masked": 30
+    },
+    {
+      "document_id": "gen-0055",
+      "provenance": {
+        "kind": "simulated_ground_truth"
+      },
+      "matched_fields": [
+        "vendor",
+        "number",
+        "date",
+        "due_date",
+        "currency",
+        "po_number",
+        "subtotal",
+        "tax",
+        "total",
+        "row:0:description",
+        "row:0:quantity",
+        "row:1:description",
+        "row:1:quantity",
+        "row:1:unit_price",
+        "row:1:amount",
+        "row:2:description",
+        "row:2:quantity",
+        "row:2:unit_price",
+        "row:2:amount",
+        "row:3:description",
+        "row:3:quantity",
+        "row:3:unit_price",
+        "row:3:amount"
+      ],
+      "excluded_fields": [
+        "row:0:amount",
+        "row:0:unit_price"
+      ],
+      "labeled_tokens": 30,
+      "unreviewed_tokens_masked": 45
+    }
+  ],
+  "n_test": 124,
   "split": "test",
   "ocr_engine": "tesseract",
   "backend": "tokens",
+  "by_source": [
+    {
+      "source": "cord",
+      "ocr_engine": "gold",
+      "split": "test",
+      "n_test": 100,
+      "before": {
+        "value": 0.8545138888888889,
+        "ci": [
+          0.7989583333333333,
+          0.9040190972222223
+        ],
+        "n": 96,
+        "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+      },
+      "after": {
+        "value": 0.8510416666666666,
+        "ci": [
+          0.7973871527777777,
+          0.9028124999999999
+        ],
+        "n": 96,
+        "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+      },
+      "excluded_without_reference": 4
+    },
+    {
+      "source": "cord",
+      "ocr_engine": "tesseract",
+      "split": "test",
+      "n_test": 100,
+      "before": {
+        "value": 0.31006944444444445,
+        "ci": [
+          0.22871527777777778,
+          0.3906423611111111
+        ],
+        "n": 96,
+        "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+      },
+      "after": {
+        "value": 0.3048611111111111,
+        "ci": [
+          0.22372395833333333,
+          0.38576388888888885
+        ],
+        "n": 96,
+        "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+      },
+      "excluded_without_reference": 4
+    },
+    {
+      "source": "generated",
+      "ocr_engine": "gold",
+      "split": "test",
+      "n_test": 24,
+      "before": {
+        "value": 1.0,
+        "ci": [
+          1.0,
+          1.0
+        ],
+        "n": 24,
+        "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+      },
+      "after": {
+        "value": 1.0,
+        "ci": [
+          1.0,
+          1.0
+        ],
+        "n": 24,
+        "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+      },
+      "excluded_without_reference": 0
+    },
+    {
+      "source": "generated",
+      "ocr_engine": "tesseract",
+      "split": "test",
+      "n_test": 24,
+      "before": {
+        "value": 1.0,
+        "ci": [
+          1.0,
+          1.0
+        ],
+        "n": 24,
+        "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+      },
+      "after": {
+        "value": 1.0,
+        "ci": [
+          1.0,
+          1.0
+        ],
+        "n": 24,
+        "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+      },
+      "excluded_without_reference": 0
+    }
+  ],
+  "cord_test": {
+    "source": "cord",
+    "ocr_engine": "tesseract",
+    "split": "test",
+    "n_test": 100,
+    "before": {
+      "value": 0.31006944444444445,
+      "ci": [
+        0.22871527777777778,
+        0.3906423611111111
+      ],
+      "n": 96,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "after": {
+      "value": 0.3048611111111111,
+      "ci": [
+        0.22372395833333333,
+        0.38576388888888885
+      ],
+      "n": 96,
+      "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
+    },
+    "excluded_without_reference": 4
+  },
+  "frozen_test_ids_sha256": "0aa1c55daa4bb2dbc49cab053aef135694453f049dbfc11d5459da56ebdd279c",
+  "frozen_test_labels_sha256": "e326ef5fbb9a86a10e40d66a195fc9c1caf3a05b92206153157973882f62417f",
+  "frozen_test_ocr_sha256": "ed707d03b7412ea109919f93686fc46abc99f5705ca0aee9d966ca40b62f6c8b",
+  "canonical_model_sha256": "a0fb8d888a3b745f5f5fdf366682fca6def0a48141f2bc081f3c5271891d7364",
   "model_path": "results/models/retrained-demo.pkl",
-  "run_id": "e79315bde74d",
+  "run_id": "76538c92bac3",
   "canonical_model_changed": false,
-  "labeling_method": "Corrected values aligned to matching OCR token spans; unmatched spans excluded",
+  "labeling_method": "Only unique reviewed field/row spans train; ambiguous, redacted and unreviewed OCR tokens are masked. Both models use identical frozen test labels and OCR.",
   "correction_source": "Simulated corrections from eight validation documents with known truth"
 }
 ```

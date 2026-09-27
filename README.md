@@ -9,16 +9,16 @@ A document intelligence workbench for accounts payable. **Published scope: GitHu
 
 ## The operating point
 
-At operating point **1.000**, selected on validation and reported on test, the review rate is **0.682 [0.534, 0.800]** and the error rate among automatically approved documents is **0.000 [0.000, 0.215]**. Review cost: 1; wrong approval cost: 20. These are policy cost units, not observed financial losses.
+At operating point **0.900**, selected on validation and reported on test, the review rate is **0.903 [0.838, 0.944]** and the error rate among automatically approved documents is **0.000 [0.000, 0.242]**. Review cost: 1; wrong approval cost: 20. These are policy cost units, not observed financial losses.
 
 ## Separate recognition from extraction
 
-| Population / extractor | Gold OCR field F1 | Tesseract field F1 |
-| --- | --- | --- |
-| cord / rules | 0.657 [0.499, 0.797] | 0.215 [0.090, 0.346] |
-| cord / tokens | 0.602 [0.411, 0.781] | 0.113 [0.033, 0.267] |
-| generated / rules | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
-| generated / tokens | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
+| Population / extractor | Evaluable / scoped documents | Gold OCR field F1 | Tesseract field F1 |
+| --- | --- | --- | --- |
+| cord / rules | 96 / 100 | 0.635 [0.552, 0.706] | 0.248 [0.178, 0.320] |
+| cord / tokens | 96 / 100 | 0.855 [0.799, 0.904] | 0.310 [0.229, 0.391] |
+| generated / rules | 24 / 24 | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
+| generated / tokens | 24 / 24 | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
 
 Intervals are reported as estimate [lower, upper]. The difference between columns measures the effect of the OCR input, including recognition, tokenization, and boxes. It is not a guaranteed additive penalty: layout heuristics can perform better on an engine's boxes. Read `results/manifest.json` for sample sizes and the complete run.
 
@@ -54,11 +54,13 @@ Open the printed preview URL with `/docket/`. For the optional API, follow [the 
 | Reproducible reporting | `scripts/render_reports.py`, whole-file drift check |
 | Deployment | `.github/workflows/pages.yml`, GitHub Pages |
 
+Extractor cards: [rules](docs/model-cards/rules.md) and [token classifier](docs/model-cards/tokens.md). Their complete contents are rendered from the same evidence and checked for drift.
+
 ## Implementation record
 
 | Capability | Status | Evidence |
 | --- | --- | --- |
-| CORD corpus, license, provenance, and mapping | Done for a bounded subset | data/cord/PROVENANCE.md preserves original train/validation/test membership; full-benchmark coverage is not claimed. |
+| CORD corpus, license, provenance, and mapping | Done for the full original splits | data/cord/PROVENANCE.md pins the source revision and preserves every original train/validation/test row; the project's field mapping is distinct from the official benchmark metric. |
 | Seeded generator and degradations | Done | packages/gen renders four layouts, labeled fields, deliberate defects, PDFs, images, and six degradation types. |
 | Real and gold OCR paths | Done | packages/ocr, committed Tesseract outputs, CER/WER, and test_engine_step_ran_independently_of_correctness. |
 | Redaction before upload storage | Done | packages/redact and upload tests cover pixel and payload redaction before persistence. |
@@ -66,11 +68,11 @@ Open the printed preview URL with `/docket/`. For the optional API, follow [the 
 | Learned extraction on both OCR inputs | Done | The CPU token classifier trains on the stated training population; results/manifest.json reports both inputs. |
 | Hosted API on Fly and Neon | Outside selected deployment | The owner selected GitHub Pages with a recorded demo; Docker and local SQLite/PostgreSQL API configuration are included. |
 | Durable review and audit | Done | API tests read corrections through independent connections, reject writes without a token, and verify transaction rollback. |
-| Business validation and scorecard | Done | Six rules have clean, defect, and empty-input tests; missing defect populations remain unmeasured. |
-| Held-out calibration | Done | packages/calibrate fits validation observations; evaluation contains reliability bins and before/after calibration error. |
+| Business validation and scorecard | Done | Six rules have clean, defect, and empty-input tests and injected positive test cases; the scorecard reports precision/recall with intervals and TP/FP/FN/TN. |
+| Held-out calibration | Done | Per-population and per-field calibration includes imperfect validation variants; reliability shows test results, independent parent counts, and intervals. |
 | Cost-based routing | Done | Validation selects the threshold; test reports review/error rates with intervals and undefined conditional rates remain unavailable. |
 | Document classification | Done | packages/classify and the manifest confusion matrix; the miscellaneous class uses generated letter tokens. |
-| Degradation sweep | Done for the recorded sample | Real OCR on generated degraded pages is committed; the lab shows the measured levels and population limits. |
+| Degradation sweep | Done for all generated test parents | Every generated test document is evaluated at five preselected levels per type; six small-multiple charts show both backends, intervals and measured floor crossings. |
 | Retraining loop | Done with explicit simulation boundary | The canonical experiment uses simulated validation corrections; the optional API consumes accepted persistent corrections. |
 | Static workbench and browser practice | Done | web includes inbox, reviewer, trace, evaluation, report, lab, rules, models, and browser SQL with local practice state. |
 | Manifest-backed reports | Done | scripts/render_reports.py renders complete files and a deliberate mutation test rejects publication drift. |
@@ -80,7 +82,7 @@ Open the printed preview URL with `/docket/`. For the optional API, follow [the 
 
 ## Limits
 
-- Bounded CORD subset, not the full benchmark: first-shard seeded training sample and first validation/test rows.
+- Full original CORD 800/100/100 splits are used, with a project-specific subtotal/tax/total and line-item mapping, not the official benchmark metric.
 - Generated invoices share four templates; performance does not establish generalization to unseen vendors or layouts.
 - Small test populations give wide intervals; the chosen costs are illustrative (review 1, wrong approval 20).
 - CORD gold words cover annotated semantic lines; full-page OCR CER/WER includes unannotated text.
@@ -90,5 +92,7 @@ Open the printed preview URL with `/docket/`. For the optional API, follow [the 
 - Extraction measurements condition on the reference document type; document classification is measured separately.
 - No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.
 - Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.
+- Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.
+- Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.
 
 Code is Apache 2.0. Receipt data retains its own attribution and license under `data/cord`. Generated vendors and transactions are fictional.
