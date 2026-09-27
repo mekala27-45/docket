@@ -1,0 +1,10 @@
+{
+  "menu.nm": "description",
+  "menu.cnt": "quantity",
+  "menu.unitprice": "unit_price",
+  "menu.price": "amount",
+  "menu.itemsubtotal": "amount",
+  "sub_total.subtotal_price": "subtotal",
+  "sub_total.tax_price": "tax",
+  "total.total_price": "total"
+}

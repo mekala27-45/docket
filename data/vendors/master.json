@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Northline Paper Co.",
+    "currency": "USD",
+    "code": "NLP"
+  },
+  {
+    "name": "Morrow Studio Supply",
+    "currency": "USD",
+    "code": "MSS"
+  },
+  {
+    "name": "Fieldwork Equipment",
+    "currency": "EUR",
+    "code": "FWE"
+  },
+  {
+    "name": "Alder Office Goods",
+    "currency": "GBP",
+    "code": "AOG"
+  }
+]

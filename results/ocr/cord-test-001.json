@@ -1,0 +1,77 @@
+{
+  "tokens": [
+    {
+      "text": "2",
+      "box": [
+        0.05625,
+        0.18203125,
+        0.041666666666666664,
+        0.03203125
+      ],
+      "confidence": 0.23,
+      "line": "1:1:1"
+    },
+    {
+      "text": "ai",
+      "box": [
+        0.0,
+        0.21015625,
+        0.096875,
+        0.07265625
+      ],
+      "confidence": 0.31,
+      "line": "1:2:1"
+    },
+    {
+      "text": "rOTAL",
+      "box": [
+        0.15416666666666667,
+        0.634375,
+        0.2625,
+        0.04609375
+      ],
+      "confidence": 0.83,
+      "line": "1:2:2"
+    },
+    {
+      "text": "391000",
+      "box": [
+        0.565625,
+        0.625,
+        0.28541666666666665,
+        0.0515625
+      ],
+      "confidence": 0.76,
+      "line": "1:2:2"
+    },
+    {
+      "text": "CASH",
+      "box": [
+        0.13645833333333332,
+        0.68984375,
+        0.22916666666666666,
+        0.03515625
+      ],
+      "confidence": 0.93,
+      "line": "1:2:3"
+    },
+    {
+      "text": "31000",
+      "box": [
+        0.5645833333333333,
+        0.68828125,
+        0.2791666666666667,
+        0.02890625
+      ],
+      "confidence": 0.95,
+      "line": "1:2:3"
+    }
+  ],
+  "engine": "tesseract",
+  "version": "5.3.0",
+  "elapsed_ms": 378.07378300931305,
+  "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
+  "document_id": "cord-test-001",
+  "image_sha256": "57bb83d788631a2a0a2c747986f0c0715fa11f2f291d38f96a2a174830901830",
+  "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
+}
