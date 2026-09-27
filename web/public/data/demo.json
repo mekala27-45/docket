@@ -65646,7 +65646,7 @@
       "split": "test",
       "ocr_engine": "tesseract",
       "backend": "tokens",
-      "model_path": "artifacts/retrained/3031a5951746/token-model.pkl",
+      "model_path": "results/models/retrained-demo.pkl",
       "run_id": "3031a5951746",
       "canonical_model_changed": false,
       "labeling_method": "Corrected values aligned to matching OCR token spans; unmatched spans excluded",

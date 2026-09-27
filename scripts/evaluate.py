@@ -213,6 +213,9 @@ def run() -> dict[str, Any]:
     corrections = [{"document": {**d, "tokens": observations[d["id"]]["tokens"]},
                     "fields": {f: d[f] for f in FIELDS if f in d}, "line_items": d["line_items"]} for d in corrected]
     manifest["retrain"] = retrain_from_corrections(corrections)
+    candidate_path = ROOT / "results/models/retrained-demo.pkl"
+    shutil.copy2(ROOT / manifest["retrain"]["model_path"], candidate_path)
+    manifest["retrain"]["model_path"] = candidate_path.relative_to(ROOT).as_posix()
     manifest["retrain"]["correction_source"] = "Simulated corrections from eight validation documents with known truth"
     write_json(ROOT / "results/manifest.json", manifest)
     documents = []
