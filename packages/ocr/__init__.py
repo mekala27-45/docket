@@ -55,7 +55,7 @@ def image_from_bytes(data: bytes, filename: str) -> Image.Image:
         document = pdfium.PdfDocument(data)
         if len(document) != 1:
             raise ValueError("This demonstration accepts single-page PDFs only")
-        rendered = document[0].render(scale=1.7).to_pil().convert("RGB")
+        rendered: Image.Image = document[0].render(scale=1.7).to_pil().convert("RGB")
         document.close()
         return rendered
     image = Image.open(io.BytesIO(data))

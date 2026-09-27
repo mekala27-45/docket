@@ -30,7 +30,7 @@ def make_document(index: int, split: str, seed: int = SEED) -> dict[str, Any]:
     rng = random.Random(seed + index)
     vendor = VENDORS[index % len(VENDORS)]
     kind = "purchase_order" if index % 3 == 2 else "invoice"
-    rows = []
+    rows: list[dict[str, Any]] = []
     for item in rng.sample(PRODUCTS, 3 + index % 3):
         qty, price = rng.randint(1, 9), rng.randint(650, 8750) / 100
         rows.append({"description": item, "quantity": qty, "unit_price": price, "amount": round(qty * price, 2)})
@@ -46,7 +46,7 @@ def make_document(index: int, split: str, seed: int = SEED) -> dict[str, Any]:
         "source": "generated", "split": split, "layout": index % 4, "defects": [],
         "expected_po_total": round(subtotal + tax, 2), "known_vendor": True,
         "vendor_master": [v["name"] for v in VENDORS],
-        "vendor_currency": {v["name"]: v["currency"] for v in VENDORS},
+        "vendor_currencies": {v["name"]: v["currency"] for v in VENDORS},
         "po_reference": {"number": f"PO-{8800 + index}", "total": round(subtotal + tax, 2)},
         "as_of": "2026-09-26",
         "created_at": f"2026-09-26T{8 + index % 10:02d}:{index % 60:02d}:00Z",
@@ -62,7 +62,11 @@ def make_document(index: int, split: str, seed: int = SEED) -> dict[str, Any]:
         doc["po_number"] = "PO-UNKNOWN"
         doc["defects"] = ["purchase_order"]
     elif defect == 9:
-        doc["duplicate"] = True
+        prior = make_document(index - 1, split, seed)
+        for key in ("vendor", "number", "date", "due_date", "currency", "po_number", "subtotal", "tax", "total",
+                    "line_items", "po_reference", "type", "expected_po_total"):
+            doc[key] = prior[key]
+        doc["duplicate_of"] = prior["id"]
         doc["defects"] = ["duplicate"]
     elif defect == 11:
         doc["due_date"] = (when - timedelta(days=7)).isoformat()
