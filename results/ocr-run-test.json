@@ -1,0 +1,12 @@
+{
+  "partition": "test",
+  "documents": 720,
+  "cache_hits": 0,
+  "engine": "tesseract",
+  "version": "5.3.0",
+  "workers": 2,
+  "omp_thread_limit": 1,
+  "elapsed_seconds": 332.5714384519961,
+  "failures": [],
+  "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
+}

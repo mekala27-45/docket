@@ -795,9 +795,9 @@
   ],
   "engine": "tesseract",
   "version": "5.3.0",
-  "elapsed_ms": 340.3205340146087,
+  "elapsed_ms": 404.1365609737113,
   "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
   "document_id": "gen-0072-photograph-0.7",
-  "image_sha256": "a7aaf066b5385f57d4456b4a545833a9987ecc22aa7df97b9a4200036df52719",
+  "image_sha256": "5f09bde7e133b9a762634314f3b6b77774e54c10ad185a535f32ccbb4b673158",
   "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
 }

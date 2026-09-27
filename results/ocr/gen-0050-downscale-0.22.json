@@ -1,0 +1,55 @@
+{
+  "tokens": [
+    {
+      "text": "Fiektwork",
+      "box": [
+        0.08261287223823247,
+        0.07126948775055679,
+        0.1575408261287224,
+        0.0200445434298441
+      ],
+      "confidence": 0.9,
+      "line": "1:1:1"
+    },
+    {
+      "text": "Equipment",
+      "box": [
+        0.25360230547550433,
+        0.07126948775055679,
+        0.17387127761767532,
+        0.026726057906458798
+      ],
+      "confidence": 0.96,
+      "line": "1:1:1"
+    },
+    {
+      "text": "PURCHASE",
+      "box": [
+        0.08261287223823247,
+        0.16926503340757237,
+        0.21902017291066284,
+        0.02301410541945063
+      ],
+      "confidence": 0.96,
+      "line": "1:1:2"
+    },
+    {
+      "text": "ORDER",
+      "box": [
+        0.31412103746397696,
+        0.16926503340757237,
+        0.14024975984630164,
+        0.02301410541945063
+      ],
+      "confidence": 0.94,
+      "line": "1:1:2"
+    }
+  ],
+  "engine": "tesseract",
+  "version": "5.3.0",
+  "elapsed_ms": 216.12647199071944,
+  "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
+  "document_id": "gen-0050-downscale-0.22",
+  "image_sha256": "e0b2a45e911a8435f65fcffec899a070a94deb7b4451dcd63717f53a8329d885",
+  "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
+}

@@ -1,0 +1,10 @@
+{
+  "tokens": [],
+  "engine": "tesseract",
+  "version": "5.3.0",
+  "elapsed_ms": 399.5615700259805,
+  "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
+  "document_id": "cord-test-039",
+  "image_sha256": "abaaed2abcb74b21e8157db9bcf8e132973ecb6cd63e6a7cbf898716d14fb491",
+  "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
+}

@@ -860,7 +860,7 @@
     "number": "INV-26001",
     "date": "2026-08-04",
     "due_date": "2026-09-03",
-    "currency": "USD",
+    "currency": "EUR",
     "po_number": "PO-8801",
     "subtotal": 887.09,
     "tax": 70.97,
@@ -894,7 +894,9 @@
     "source": "generated",
     "split": "train",
     "layout": 1,
-    "defects": [],
+    "defects": [
+      "currency"
+    ],
     "expected_po_total": 958.06,
     "known_vendor": true,
     "vendor_master": [
@@ -1126,7 +1128,7 @@
         "label": "O"
       },
       {
-        "text": "USD",
+        "text": "EUR",
         "box": [
           0.23202614379084968,
           0.2840909090909091,
@@ -11995,7 +11997,7 @@
     "number": "INV-26013",
     "date": "2026-08-16",
     "due_date": "2026-09-15",
-    "currency": "USD",
+    "currency": "EUR",
     "po_number": "PO-8813",
     "subtotal": 548.16,
     "tax": 43.85,
@@ -12029,7 +12031,9 @@
     "source": "generated",
     "split": "train",
     "layout": 1,
-    "defects": [],
+    "defects": [
+      "currency"
+    ],
     "expected_po_total": 592.01,
     "known_vendor": true,
     "vendor_master": [
@@ -12261,7 +12265,7 @@
         "label": "O"
       },
       {
-        "text": "USD",
+        "text": "EUR",
         "box": [
           0.23202614379084968,
           0.2840909090909091,
@@ -23163,7 +23167,7 @@
     "number": "INV-26025",
     "date": "2026-08-28",
     "due_date": "2026-09-27",
-    "currency": "USD",
+    "currency": "EUR",
     "po_number": "PO-8825",
     "subtotal": 611.17,
     "tax": 48.89,
@@ -23197,7 +23201,9 @@
     "source": "generated",
     "split": "train",
     "layout": 1,
-    "defects": [],
+    "defects": [
+      "currency"
+    ],
     "expected_po_total": 660.06,
     "known_vendor": true,
     "vendor_master": [
@@ -23429,7 +23435,7 @@
         "label": "O"
       },
       {
-        "text": "USD",
+        "text": "EUR",
         "box": [
           0.23202614379084968,
           0.2840909090909091,
@@ -34309,7 +34315,7 @@
     "number": "INV-26037",
     "date": "2026-08-10",
     "due_date": "2026-09-09",
-    "currency": "USD",
+    "currency": "EUR",
     "po_number": "PO-8837",
     "subtotal": 1169.98,
     "tax": 93.6,
@@ -34343,7 +34349,9 @@
     "source": "generated",
     "split": "train",
     "layout": 1,
-    "defects": [],
+    "defects": [
+      "currency"
+    ],
     "expected_po_total": 1263.58,
     "known_vendor": true,
     "vendor_master": [
@@ -34575,7 +34583,7 @@
         "label": "O"
       },
       {
-        "text": "USD",
+        "text": "EUR",
         "box": [
           0.23202614379084968,
           0.2840909090909091,
@@ -45411,7 +45419,7 @@
     "number": "INV-26049",
     "date": "2026-08-22",
     "due_date": "2026-09-21",
-    "currency": "USD",
+    "currency": "EUR",
     "po_number": "PO-8849",
     "subtotal": 757.02,
     "tax": 60.56,
@@ -45445,7 +45453,9 @@
     "source": "generated",
     "split": "validation",
     "layout": 1,
-    "defects": [],
+    "defects": [
+      "currency"
+    ],
     "expected_po_total": 817.58,
     "known_vendor": true,
     "vendor_master": [
@@ -45677,7 +45687,7 @@
         "label": "O"
       },
       {
-        "text": "USD",
+        "text": "EUR",
         "box": [
           0.23202614379084968,
           0.2840909090909091,
@@ -56557,7 +56567,7 @@
     "number": "INV-26061",
     "date": "2026-08-04",
     "due_date": "2026-09-03",
-    "currency": "USD",
+    "currency": "EUR",
     "po_number": "PO-8861",
     "subtotal": 444.2,
     "tax": 35.54,
@@ -56591,7 +56601,9 @@
     "source": "generated",
     "split": "validation",
     "layout": 1,
-    "defects": [],
+    "defects": [
+      "currency"
+    ],
     "expected_po_total": 479.74,
     "known_vendor": true,
     "vendor_master": [
@@ -56823,7 +56835,7 @@
         "label": "O"
       },
       {
-        "text": "USD",
+        "text": "EUR",
         "box": [
           0.23202614379084968,
           0.2840909090909091,
@@ -67703,7 +67715,7 @@
     "number": "INV-26073",
     "date": "2026-08-16",
     "due_date": "2026-09-15",
-    "currency": "USD",
+    "currency": "EUR",
     "po_number": "PO-8873",
     "subtotal": 1074.21,
     "tax": 85.94,
@@ -67737,7 +67749,9 @@
     "source": "generated",
     "split": "test",
     "layout": 1,
-    "defects": [],
+    "defects": [
+      "currency"
+    ],
     "expected_po_total": 1160.15,
     "known_vendor": true,
     "vendor_master": [
@@ -67969,7 +67983,7 @@
         "label": "O"
       },
       {
-        "text": "USD",
+        "text": "EUR",
         "box": [
           0.23202614379084968,
           0.2840909090909091,
@@ -78860,7 +78874,7 @@
     "number": "INV-26085",
     "date": "2026-08-28",
     "due_date": "2026-09-27",
-    "currency": "USD",
+    "currency": "EUR",
     "po_number": "PO-8885",
     "subtotal": 1296.6,
     "tax": 103.73,
@@ -78894,7 +78908,9 @@
     "source": "generated",
     "split": "test",
     "layout": 1,
-    "defects": [],
+    "defects": [
+      "currency"
+    ],
     "expected_po_total": 1400.33,
     "known_vendor": true,
     "vendor_master": [
@@ -79126,7 +79142,7 @@
         "label": "O"
       },
       {
-        "text": "USD",
+        "text": "EUR",
         "box": [
           0.23202614379084968,
           0.2840909090909091,

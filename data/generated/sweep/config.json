@@ -1,0 +1,76 @@
+{
+  "split": "test",
+  "parent_count": 24,
+  "observation_count": 720,
+  "seed": 11027,
+  "parameters": {
+    "skew": {
+      "levels": [
+        0,
+        1.5,
+        3,
+        5,
+        7
+      ],
+      "unit": "degrees",
+      "severe_direction": "increasing"
+    },
+    "blur": {
+      "levels": [
+        0,
+        0.5,
+        1,
+        1.75,
+        2.5
+      ],
+      "unit": "Gaussian radius in pixels",
+      "severe_direction": "increasing"
+    },
+    "noise": {
+      "levels": [
+        0,
+        10,
+        20,
+        30,
+        40
+      ],
+      "unit": "Gaussian RGB standard deviation",
+      "severe_direction": "increasing"
+    },
+    "jpeg": {
+      "levels": [
+        95,
+        60,
+        35,
+        18,
+        8
+      ],
+      "unit": "JPEG quality",
+      "severe_direction": "decreasing"
+    },
+    "downscale": {
+      "levels": [
+        1,
+        0.75,
+        0.5,
+        0.35,
+        0.22
+      ],
+      "unit": "resolution factor",
+      "severe_direction": "decreasing"
+    },
+    "photograph": {
+      "levels": [
+        0,
+        0.35,
+        0.7,
+        1.1,
+        1.5
+      ],
+      "unit": "perspective and lighting severity",
+      "severe_direction": "increasing"
+    }
+  },
+  "sampling_unit": "parent_id; level observations share document truth",
+  "parameters_selected_before_expanded_test_evaluation": true
+}

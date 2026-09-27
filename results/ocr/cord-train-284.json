@@ -1,0 +1,22 @@
+{
+  "tokens": [
+    {
+      "text": "=",
+      "box": [
+        0.0,
+        0.0,
+        1.0,
+        0.6051851851851852
+      ],
+      "confidence": 0.39,
+      "line": "1:1:1"
+    }
+  ],
+  "engine": "tesseract",
+  "version": "5.3.0",
+  "elapsed_ms": 839.4863489666022,
+  "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
+  "document_id": "cord-train-284",
+  "image_sha256": "9782ef91eda66f8fef42f3e77e8684d444cee397b1332266456d9722c88efbc5",
+  "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
+}

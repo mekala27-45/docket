@@ -257,7 +257,9 @@ if __name__ == "__main__":
     if args.cord_only and args.degradation_only:
         parser.error("Choose at most one of --cord-only and --degradation-only")
     generated_file = ROOT / "data/generated/annotations.json"
-    generated = json.loads(generated_file.read_text(encoding="utf-8")) if generated_file.exists() else generate()
+    reuse_clean = args.cord_only or args.degradation_only
+    generated = (json.loads(generated_file.read_text(encoding="utf-8"))
+                 if reuse_clean and generated_file.exists() else generate())
     print(f"Generated {len(generated)} documents", flush=True)
     if not args.degradation_only:
         cord = [] if args.skip_cord else fetch_cord()

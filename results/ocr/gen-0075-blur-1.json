@@ -773,9 +773,9 @@
   ],
   "engine": "tesseract",
   "version": "5.3.0",
-  "elapsed_ms": 380.2879019640386,
+  "elapsed_ms": 358.16769796656445,
   "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
   "document_id": "gen-0075-blur-1",
-  "image_sha256": "f998f0ec952b781ba96a68f422362210d583a0dced0e4e06503b4d63a3c6a8da",
+  "image_sha256": "079c1f1510bf85f3f0c67050e3b3a76d22e32470583f5f34ea6d78aff47a8002",
   "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
 }

@@ -1,0 +1,52 @@
+{
+  "revision": "7f0115a4b758a71d6473b8d085751692da2fef98",
+  "splits": {
+    "train": 800,
+    "validation": 100,
+    "test": 100
+  },
+  "shards": [
+    {
+      "split": "train",
+      "filename": "train-00000-of-00004-b4aaeceff1d90ecb.parquet",
+      "rows": 200,
+      "sha256": "da3994eee1bf9bd3c57f0d53a72c3a6812c8696c5ba26245987949ddf73483cc",
+      "bytes": 490224630
+    },
+    {
+      "split": "train",
+      "filename": "train-00001-of-00004-7dbbe248962764c5.parquet",
+      "rows": 200,
+      "sha256": "cce4def16a0d6a6c75f80be712f7494c56c318a8829b712f5c62650155c9e58e",
+      "bytes": 441418432
+    },
+    {
+      "split": "train",
+      "filename": "train-00002-of-00004-688fe1305a55e5cc.parquet",
+      "rows": 200,
+      "sha256": "591e2db8fe8b1d364b054f46e8c375b7f00e72578914ba46a573b6858162cab2",
+      "bytes": 443802181
+    },
+    {
+      "split": "train",
+      "filename": "train-00003-of-00004-2d0cd200555ed7fd.parquet",
+      "rows": 200,
+      "sha256": "1ffd9de8d6fbcee7630fd4cdfedff05b9b7fabc0fae4fc17557c5fe7cf178748",
+      "bytes": 455555434
+    },
+    {
+      "split": "validation",
+      "filename": "validation-00000-of-00001-cc3c5779fe22e8ca.parquet",
+      "rows": 100,
+      "sha256": "0d0f6dac11fdcc549de2746aa9f53136a3bc22a2a1aff2b0b847f7622ad60c15",
+      "bytes": 242080800
+    },
+    {
+      "split": "test",
+      "filename": "test-00000-of-00001-9c204eb3f4e11791.parquet",
+      "rows": 100,
+      "sha256": "51c65f1788faff392abe2a0b55b023eb23e9be551c509138eaa3a832514224e7",
+      "bytes": 234202795
+    }
+  ]
+}

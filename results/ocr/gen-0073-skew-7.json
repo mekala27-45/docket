@@ -199,14 +199,14 @@
       "line": "1:1:5"
     },
     {
-      "text": "usD",
+      "text": "EUR",
       "box": [
-        0.20076849183477424,
-        0.3125463994060876,
+        0.2017291066282421,
+        0.311804008908686,
         0.03554274735830932,
-        0.011878247958426132
+        0.012620638455827766
       ],
-      "confidence": 0.84,
+      "confidence": 0.94,
       "line": "1:1:5"
     },
     {
@@ -415,7 +415,7 @@
         0.03554274735830932,
         0.011878247958426132
       ],
-      "confidence": 0.93,
+      "confidence": 0.89,
       "line": "1:1:10"
     },
     {
@@ -839,9 +839,9 @@
   ],
   "engine": "tesseract",
   "version": "5.3.0",
-  "elapsed_ms": 378.8387829554267,
+  "elapsed_ms": 449.83531098114327,
   "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
   "document_id": "gen-0073-skew-7",
-  "image_sha256": "c934e371877b76c21cf85f635d7d38e0058697e78c75a264f332ae1829edbe2f",
+  "image_sha256": "ab4a9cd8fc4d2aa0ce11852f138506b8dbaf74dbe5e1b4ee845a91d121eeb97b",
   "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
 }

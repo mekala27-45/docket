@@ -166,14 +166,14 @@
       "line": "1:1:5"
     },
     {
-      "text": "i=",
+      "text": "ie",
       "box": [
         0.23150816522574447,
         0.2873051224944321,
         0.0345821325648415,
         0.009651076466221232
       ],
-      "confidence": 0.51,
+      "confidence": 0.46,
       "line": "1:1:5"
     },
     {
@@ -674,9 +674,9 @@
   ],
   "engine": "tesseract",
   "version": "5.3.0",
-  "elapsed_ms": 382.93091900413856,
+  "elapsed_ms": 393.41450703796,
   "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
   "document_id": "gen-0073-downscale-0.22",
-  "image_sha256": "2e854163e5f62f326b96b160f958e413e98440d7dc0e2c32af9704d051d5fcae",
+  "image_sha256": "81cb0fe30a412156400a465a78ab97a23317c4bd26ad5c8e808f36df7df444dd",
   "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
 }

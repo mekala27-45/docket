@@ -1,0 +1,44 @@
+{
+  "tokens": [
+    {
+      "text": "|",
+      "box": [
+        0.0,
+        0.0,
+        0.04814814814814815,
+        0.2604166666666667
+      ],
+      "confidence": 0.88,
+      "line": "1:1:1"
+    },
+    {
+      "text": "|",
+      "box": [
+        0.5314814814814814,
+        0.0,
+        0.4685185185185185,
+        0.6416666666666667
+      ],
+      "confidence": 0.9,
+      "line": "1:1:1"
+    },
+    {
+      "text": "a",
+      "box": [
+        0.0,
+        0.8328125,
+        0.8777777777777778,
+        0.1671875
+      ],
+      "confidence": 0.26,
+      "line": "1:1:2"
+    }
+  ],
+  "engine": "tesseract",
+  "version": "5.3.0",
+  "elapsed_ms": 699.9093449558131,
+  "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
+  "document_id": "cord-train-161",
+  "image_sha256": "b4511511ee06baa00bbd5de5f5a029f152794d35f6aae2b4d8b8cdfa4db6c028",
+  "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
+}

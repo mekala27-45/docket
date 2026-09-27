@@ -1,0 +1,55 @@
+{
+  "tokens": [
+    {
+      "text": "ITEMS",
+      "box": [
+        0.08555555555555555,
+        0.6340740740740741,
+        0.1411111111111111,
+        0.03925925925925926
+      ],
+      "confidence": 0.95,
+      "line": "1:1:1"
+    },
+    {
+      "text": "Pay",
+      "box": [
+        0.0811111111111111,
+        0.7096296296296296,
+        0.07777777777777778,
+        0.03333333333333333
+      ],
+      "confidence": 0.96,
+      "line": "1:1:2"
+    },
+    {
+      "text": "Cash",
+      "box": [
+        0.1811111111111111,
+        0.7148148148148148,
+        0.1,
+        0.02
+      ],
+      "confidence": 0.89,
+      "line": "1:1:2"
+    },
+    {
+      "text": "5\u00a2",
+      "box": [
+        0.3055555555555556,
+        0.7133333333333334,
+        0.03,
+        0.02148148148148148
+      ],
+      "confidence": 0.26,
+      "line": "1:1:2"
+    }
+  ],
+  "engine": "tesseract",
+  "version": "5.3.0",
+  "elapsed_ms": 471.2558659957722,
+  "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
+  "document_id": "cord-train-409",
+  "image_sha256": "70a23df84350fcbced36f71f4e44d25b182174b9faa1bf5ebbde87061e732b9d",
+  "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
+}

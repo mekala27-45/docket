@@ -188,25 +188,25 @@
       "line": "1:1:4"
     },
     {
-      "text": "\u2018Currency",
+      "text": "Canacy",
       "box": [
-        0.07684918347742556,
-        0.28433556050482556,
-        0.06243996157540826,
-        0.01855976243504083
+        0.08069164265129683,
+        0.2806236080178174,
+        0.05859750240153699,
+        0.022271714922048998
       ],
-      "confidence": 0.62,
+      "confidence": 0.08,
       "line": "1:1:5"
     },
     {
-      "text": "USD",
+      "text": "EUR",
       "box": [
         0.23246878001921228,
         0.28804751299183373,
         0.0345821325648415,
         0.010393466963622866
       ],
-      "confidence": 0.56,
+      "confidence": 0.96,
       "line": "1:1:5"
     },
     {
@@ -850,9 +850,9 @@
   ],
   "engine": "tesseract",
   "version": "5.3.0",
-  "elapsed_ms": 342.90429996326566,
+  "elapsed_ms": 360.75167398666963,
   "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
   "document_id": "gen-0073-downscale-0.5",
-  "image_sha256": "652ca3ed119251a45512f2bdda02829ec987bdf1389599cd06cb9b5722af9d6c",
+  "image_sha256": "1efac6a1ee32f2133ca222fb4a666405d7a5bc68e35bfd0072207c0d6c0520ff",
   "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
 }

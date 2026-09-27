@@ -1,0 +1,55 @@
+{
+  "tokens": [
+    {
+      "text": "Fieldwork",
+      "box": [
+        0.08357348703170028,
+        0.07052709725315516,
+        0.1575408261287224,
+        0.021529324424647365
+      ],
+      "confidence": 0.96,
+      "line": "1:1:1"
+    },
+    {
+      "text": "Equipment",
+      "box": [
+        0.2526416906820365,
+        0.07052709725315516,
+        0.17579250720461095,
+        0.025983667409057165
+      ],
+      "confidence": 0.96,
+      "line": "1:1:1"
+    },
+    {
+      "text": "PURCHASE",
+      "box": [
+        0.08357348703170028,
+        0.16778025241276912,
+        0.21709894332372717,
+        0.024498886414253896
+      ],
+      "confidence": 0.95,
+      "line": "1:1:2"
+    },
+    {
+      "text": "ORDER",
+      "box": [
+        0.31316042267050914,
+        0.16778025241276912,
+        0.14024975984630164,
+        0.024498886414253896
+      ],
+      "confidence": 0.96,
+      "line": "1:1:2"
+    }
+  ],
+  "engine": "tesseract",
+  "version": "5.3.0",
+  "elapsed_ms": 213.53124803863466,
+  "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
+  "document_id": "gen-0086-blur-1.75",
+  "image_sha256": "188e8b2dcc6b20f1ceed37ff71d09ad3311dc8f7e8bf7191c0dccc76d50f6924",
+  "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
+}

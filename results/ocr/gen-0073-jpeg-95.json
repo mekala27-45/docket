@@ -155,11 +155,11 @@
       "line": "1:1:4"
     },
     {
-      "text": "USD",
+      "text": "EUR",
       "box": [
         0.23246878001921228,
         0.28804751299183373,
-        0.0345821325648415,
+        0.03554274735830932,
         0.009651076466221232
       ],
       "confidence": 0.95,
@@ -696,9 +696,9 @@
   ],
   "engine": "tesseract",
   "version": "5.3.0",
-  "elapsed_ms": 340.977534011472,
+  "elapsed_ms": 338.08839198900387,
   "preprocessing": "EXIF orientation; RGB; upscale width below 900px; no threshold; PSM 6; eng",
   "document_id": "gen-0073-jpeg-95",
-  "image_sha256": "78aba166032644d6807a024e319d22fec4b1989a40395313d410b7456d04cf07",
+  "image_sha256": "7035ce287d8c15a493dc1d3f7ca0e3a1507cc403ba8a62b41680a2eed503f555",
   "preprocessing_signature": "exif-rgb-upscale900-psm6-eng-v1"
 }
