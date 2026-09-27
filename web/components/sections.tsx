@@ -1204,7 +1204,12 @@ export function Lab({
             <Unavailable />
           )}
           <div className="lab-known">
-            <h3>Current extracted fields</h3>
+            <h3>Source-page extraction (before degradation)</h3>
+            <p className="section-caption">
+              Values come from the clean source-page queue record and may include
+              browser practice edits. They are not predictions for the selected
+              degraded image; its aggregate measurements appear above.
+            </p>
             {doc &&
               Object.entries(doc.extraction.fields)
                 .slice(0, 7)
