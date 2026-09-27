@@ -14,9 +14,6 @@ web:
 reports:
 	uv run python scripts/render_reports.py
 rederive:
-	uv run python scripts/build_dataset.py
-	uv run python scripts/evaluate.py
-	uv run python scripts/render_reports.py
-	uv run python scripts/build_notebooks.py
+	uv run python scripts/reset_and_rederive.py
 api:
 	uv run uvicorn packages.api.main:app --host 127.0.0.1 --port 8000
