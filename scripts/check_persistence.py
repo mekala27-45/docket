@@ -76,7 +76,11 @@ def run() -> None:
                     image.save(buffer, "PNG")
                     uploaded = client.post("/v1/documents", headers={"Authorization": f"Bearer {token}"}, files={"file": ("generated.png", buffer.getvalue(), "image/png")})
                     uploaded.raise_for_status()
-                    document_id = uploaded.json()["id"]
+                    payload = uploaded.json()
+                    assert {"vendor", "number", "currency", "total", "extraction", "rules", "image", "status"}.issubset(payload)
+                    assert payload["vendor"] is not None and payload["number"] is not None
+                    assert payload["status"] == "needs_review"
+                    document_id = payload["id"]
                     reviewed = client.post(f"/v1/review/{document_id}", headers={"Authorization": f"Bearer {token}"}, json={"fields": {"total": 123.45}, "decision": "accept", "reason": "Generated integration fixture"})
                     reviewed.raise_for_status()
                     audit_id = reviewed.json()["audit_id"]

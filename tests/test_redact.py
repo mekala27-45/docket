@@ -51,3 +51,8 @@ def test_identifier_patterns():
     for value in PLANTED_IDENTIFIERS:
         assert value not in redact_text(value)
     assert "name@example.com" not in redact_text("name@example.com")
+
+
+def test_planted_scan_does_not_treat_fractional_coordinates_as_cards():
+    assert scan_text('{"box": [0.4111111111111111, 0.2]}') == []
+    assert scan_text('{"text": "4111111111111111"}')

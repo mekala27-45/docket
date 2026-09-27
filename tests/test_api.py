@@ -35,6 +35,10 @@ def test_correction_is_committed(api):
             correction = session.scalar(select(Correction))
             assert correction.fields["total"] == 42.5
             assert session.get(Document, "test-1").payload["status"] == "accepted"
+            saved = session.get(Document, "test-1").payload
+            assert saved["total"] == 42.5 and saved["risk"] == 0
+            assert saved["extraction"]["fields"]["total"]["confidence"] is None
+            assert saved["extraction"]["fields"]["total"]["model_confidence"] == 0.6
             assert session.get(Audit, response.json()["audit_id"]).action == "review"
     finally:
         independent_engine.dispose()
@@ -249,3 +253,21 @@ def test_unknown_review_field_and_manual_retention(api):
     assert client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"not_a_field": "value"}, "decision": "accept"}).status_code == 422
     assert client.post("/v1/review/missing", headers={"Authorization": "Bearer test-token"}, json={"decision": "accept"}).status_code == 404
     assert client.post("/v1/retention", headers={"Authorization": "Bearer test-token"}).json() == {"deleted": 0}
+
+
+def test_retrain_reports_invalid_corrections_without_saving_model(api, monkeypatch):
+    from packages.api.store import ModelRun
+
+    client, app, _ = api
+    pipeline = types.ModuleType("packages.pipeline")
+
+    def reject_frozen_test(corrections):
+        raise ValueError("Frozen test document")
+
+    pipeline.retrain_from_corrections = reject_frozen_test
+    monkeypatch.setitem(sys.modules, "packages.pipeline", pipeline)
+    client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"total": 42}, "decision": "accept"}).raise_for_status()
+    response = client.post("/v1/retrain", headers={"Authorization": "Bearer test-token"})
+    assert response.status_code == 422
+    with Session(app.state.engine) as session:
+        assert session.scalar(select(ModelRun)) is None

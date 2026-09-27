@@ -188,12 +188,19 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
             fields = extraction.setdefault("fields", {})
             for name, value in safe["fields"].items():
                 previous = fields.get(name, {})
-                fields[name] = {**previous, "value": value, "reviewed": True, "trace": [*previous.get("trace", []), {"step": "human_review", "detail": "A reviewer supplied this value."}]}
+                fields[name] = {**previous, "value": value, "reviewed": True,
+                                "model_confidence": previous.get("model_confidence", previous.get("confidence")),
+                                "confidence": None,
+                                "calibration_sentence": "Human corrected value; the original model estimate does not measure this revision.",
+                                "trace": [*previous.get("trace", []), {"step": "human_review", "detail": "A reviewer supplied this value."}]}
+                payload[name] = value
             rows = safe["line_items"] if safe["line_items"] is not None else extraction.get("line_items", [])
             extraction["line_items"] = rows
             known = [row.payload for row in session.scalars(select(Document))]
             payload["rules"] = validate_document(payload, fields, rows, known_documents=known)
             payload["status"] = "accepted" if request.decision == "accept" else "rejected"
+            payload["risk"] = 0
+            payload["line_items"] = rows
             payload["reviewed_at"] = datetime.now(UTC).isoformat()
             correction = Correction(document_id=document_id, fields={key: value.get("value") for key, value in fields.items()}, line_items=rows, decision=request.decision)
             event = Audit(document_id=document_id, action="review", detail={"decision": request.decision, "changed_fields": list(safe["fields"]), "reason": safe["reason"], "redaction": redaction})
@@ -260,7 +267,10 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
         from packages.pipeline import retrain_from_corrections
 
         async with retrain_lock:
-            report = await run_in_threadpool(retrain_from_corrections, corrections)
+            try:
+                report = await run_in_threadpool(retrain_from_corrections, corrections)
+            except ValueError as exc:
+                raise HTTPException(422, "Corrections must contain eligible non-test documents with trainable OCR spans") from exc
         report, _ = redact_payload(report)
         with Session(engine) as session, session.begin():
             record = ModelRun(report=report)

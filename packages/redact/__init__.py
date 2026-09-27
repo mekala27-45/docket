@@ -101,5 +101,12 @@ def scan_text(text: str, identifiers: tuple[str, ...] = PLANTED_IDENTIFIERS) -> 
     """Return planted values found, rejecting an empty scan as uninformative."""
     if not text.strip():
         raise ValueError("Cannot scan an empty artifact")
-    normalized = re.sub(r"[^a-z0-9]", "", text.lower())
-    return [value for value in identifiers if re.sub(r"[^a-z0-9]", "", value.lower()) in normalized]
+    # Allow identifier separators without joining unrelated JSON values or
+    # interpreting the digits of a fractional OCR coordinate as a card number.
+    found = []
+    for value in identifiers:
+        digits = re.sub(r"\D", "", value)
+        pattern = r"(?<![\d.])" + r"[\s-]*".join(digits) + r"(?![\d.])"
+        if re.search(pattern, text):
+            found.append(value)
+    return found
