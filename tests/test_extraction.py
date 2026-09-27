@@ -88,3 +88,12 @@ def test_model_roundtrip_and_bad_artifacts(tmp_path, documents):
 def test_unavailable_backend_is_explicit(backend):
     with pytest.raises(ValueError):
         extract([], backend=backend)
+
+
+def test_missing_money_is_not_published_as_zero():
+    from packages.pipeline import process_document
+    document = process_document({"id": "unreadable", "type": "other", "source": "upload", "tokens": []})
+    assert document["total"] is None
+    assert document["subtotal"] is None
+    assert document["tax"] is None
+    assert document["status"] == "needs_review"
