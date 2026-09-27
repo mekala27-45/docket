@@ -46,8 +46,6 @@ def process_document(document: dict[str, Any], backend: str = "rules") -> dict[s
             value = str(doc.get("id", "Unresolved document"))
         elif value is None and field == "currency":
             value = "Unknown"
-        elif value is None and field == "total":
-            value = 0
         doc[field] = value
     doc["line_items"] = extraction["line_items"]
     doc.setdefault("created_at", datetime.now(UTC).isoformat())

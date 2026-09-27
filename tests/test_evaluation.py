@@ -52,3 +52,15 @@ def test_paired_comparison_and_multiple_testing():
     assert benjamini_hochberg([.01, .04, .03]) == pytest.approx([.03, .04, .04])
     with pytest.raises(ValueError):
         paired_comparison([1], [])
+
+
+def test_published_sweep_examples_reference_real_source_documents():
+    from pathlib import Path
+
+    from packages.core import ROOT, read_json
+    bundle = read_json(ROOT / "web/public/data/demo.json")
+    ids = {document["id"] for document in bundle["documents"]}
+    for observation in bundle["evaluation"]["degradation"]:
+        assert observation["document_id"] in ids
+        assert (ROOT / "web/public" / observation["image"].lstrip("/")).is_file()
+        assert Path(observation["image"]).stem.startswith(observation["document_id"] + "-")
