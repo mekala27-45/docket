@@ -5,7 +5,7 @@ import pytest
 from packages.core import ROOT, read_json
 from packages.evaluation import score_document
 from packages.extract import extract
-from packages.extract.rules import field_result, group_lines
+from packages.extract.rules import field_result, group_lines, numeric_token
 from packages.extract.tokens import TokenExtractor, token_features
 from packages.ocr import gold_words
 
@@ -97,3 +97,19 @@ def test_missing_money_is_not_published_as_zero():
     assert document["subtotal"] is None
     assert document["tax"] is None
     assert document["status"] == "needs_review"
+
+
+@pytest.mark.parametrize("text", ["Rp.118.000", "rp118.000", "RP. 1.234.000", "$1,234.56", "€12,50", "-25.40"])
+def test_numeric_token_accepts_supported_currency_prefixes(text):
+    assert numeric_token({"text": text})
+
+
+@pytest.mark.parametrize("text", ["Rp.", "Rp.12..3", "12,,", "1,2,3", "Total118.000", "INV-123", "2026-09-27", "NaN"])
+def test_numeric_token_refuses_malformed_or_nonmonetary_values(text):
+    assert not numeric_token({"text": text})
+
+
+def test_rules_extract_total_with_attached_rupiah_prefix():
+    tokens = [{"text": text, "box": [.1 + index * .4, .7, .3, .03], "confidence": 1}
+              for index, text in enumerate(["Total", "Rp.118.000"])]
+    assert extract(tokens)["fields"]["total"]["value"] == 118000

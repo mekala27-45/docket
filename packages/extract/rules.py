@@ -23,7 +23,11 @@ def group_lines(tokens: list[dict[str, Any]], tolerance: float = .012) -> list[l
 
 
 def numeric_token(token: dict[str, Any]) -> bool:
-    return bool(re.fullmatch(r"[\$€£]?[-+]?\d[\d.,]*", token["text"].strip()))
+    # Accept the same locale shapes handled by amount(), including the period
+    # in Rp. currency notation, while rejecting malformed grouping and labels.
+    value = token["text"].strip()
+    number = r"(?:\d+(?:[.,]\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d{1,3}(?:\.\d{3})+)"
+    return bool(re.fullmatch(r"(?:Rp\.?\s*|[\$€£])?[-+]?" + number, value, re.IGNORECASE)) and amount(value) is not None
 
 
 def candidate(value: Any, tokens: list[dict[str, Any]], score: float, reason: str) -> dict[str, Any]:

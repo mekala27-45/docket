@@ -178,7 +178,7 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
                 await retention_task
             engine.dispose()
 
-    app = FastAPI(title="docket", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="docket", version="0.2.0", lifespan=lifespan)
     app.state.engine = engine
     app.add_middleware(UploadBodyLimit)
     retrain_lock = asyncio.Lock()
