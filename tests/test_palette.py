@@ -1,6 +1,6 @@
 import pytest
 
-from scripts.validate_palette import LIGHT, contrast, validate
+from scripts.validate_palette import LIGHT, actual_interface, contrast, validate
 
 
 def test_white_paper_palette_passes() -> None:
@@ -19,3 +19,13 @@ def test_palette_refuses_empty() -> None:
 
 def test_contrast_symmetric() -> None:
     assert contrast('#123456', '#FFFFFF') == contrast('#FFFFFF', '#123456')
+
+
+def test_actual_css_theme_text_contrast() -> None:
+    css = ':root{--bg:#fff;--surface:#fff;--surface-alt:#fff;--ink:#000;--secondary:#444;--muted:#555;}'
+    css += ':root[data-theme=dark]{--bg:#000;--surface:#111;--surface-alt:#222;--ink:#fff;--secondary:#ddd;--muted:#ccc;}'
+    assert len(actual_interface(css)) == 6
+    with pytest.raises(ValueError):
+        actual_interface(css.replace('--muted:#555', '--muted:#ddd'))
+    with pytest.raises(ValueError):
+        actual_interface('')
