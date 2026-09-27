@@ -40,6 +40,12 @@ def run() -> dict[str, Any]:
     predictions: dict[tuple[str, str, str], dict[str, Any]] = {}
     scored = []
     calibration_rows = []
+    calibration_variants = read_json(ROOT / "data/generated/calibration/annotations.json")
+    sweep = read_json(ROOT / "data/generated/sweep/annotations.json")
+    parents = {d["id"]: d["split"] for d in dataset}
+    for partition, variants in (("validation", calibration_variants), ("test", sweep)):
+        if not variants or any(d["split"] != partition or parents.get(d["parent_id"]) != partition for d in variants):
+            raise ValueError("Degraded variants must retain their parent document's held-out partition")
     for document in dataset:
         if document["split"] == "train":
             continue
@@ -56,7 +62,21 @@ def run() -> dict[str, Any]:
                     for field in fields_to_score(document):
                         calibration_rows.append({"field": field, "backend": backend,
                                                  "score": prediction["fields"][field]["confidence"],
-                                                 "correct": score["fields"][field]})
+                                                 "correct": score["fields"][field], "population": document["source"],
+                                                 "parent_id": document["id"], "split": "validation"})
+    for document in [*calibration_variants, *sweep]:
+        observation = read_json(ROOT / "results/ocr" / f"{document['id']}.json")
+        for backend in ("rules", "tokens"):
+            prediction = extract(observation["tokens"], document["type"], backend, token_model)
+            prediction["ocr_engine"] = "tesseract"
+            predictions[(document["id"], backend, "tesseract")] = prediction
+            # Each baseline already appears as its clean parent. Do not count it six times.
+            if document["split"] == "validation" and document.get("level_index", 0) > 0:
+                for field in fields_to_score(document):
+                    calibration_rows.append({"field": field, "backend": backend,
+                        "score": prediction["fields"][field]["confidence"],
+                        "correct": int(matches(prediction["fields"][field]["value"], document[field], field)),
+                        "population": "generated", "parent_id": document["parent_id"], "split": "validation"})
     calibrator = FieldCalibrator().fit(calibration_rows)
     calibrator.save()
     for prediction in predictions.values():
@@ -85,15 +105,21 @@ def run() -> dict[str, Any]:
                           "preprocessing": observations[documents[0]["id"]]["preprocessing"],
                           "cer": interval([e["cer"] for e in errors]), "wer": interval([e["wer"] for e in errors])})
     calibration_table = []
-    for backend in ("rules", "tokens"):
+    for backend, population in ((b, s) for b in ("rules", "tokens") for s in ("generated", "cord")):
         for field in FIELDS:
-            docs = [d for d in test if field in fields_to_score(d)]
+            docs = [d for d in [*test, *(d for d in sweep if d.get("level_index", 0) > 0)]
+                    if d["source"] == population and field in fields_to_score(d)]
+            if not docs:
+                continue
             outcomes = [int(matches(predictions[(d["id"], backend, "tesseract")]["fields"][field]["value"], d[field], field))
                         for d in docs]
             raw = [predictions[(d["id"], backend, "tesseract")]["fields"][field]["raw_confidence"] for d in docs]
             calibrated = [predictions[(d["id"], backend, "tesseract")]["fields"][field]["confidence"] for d in docs]
-            measured = reliability(calibrated, outcomes)
+            parent_ids = [d.get("parent_id", d["id"]) for d in docs]
+            measured = reliability(calibrated, outcomes, groups=parent_ids if population == "generated" else None)
             calibration_table.append({"field": field, "backend": backend, "n": len(docs), "split": "test",
+                                      "population": population, "independent_documents": len(set(parent_ids)),
+                                      "scope": "clean_and_degraded" if population == "generated" else "original",
                                       "fitted_on": "validation", "ece_before": reliability(raw, outcomes)["ece"],
                                       "ece_after": measured["ece"], "bins": measured["bins"]})
     routing_records: dict[str, list[dict[str, Any]]] = {"validation": [], "test": []}
@@ -105,7 +131,7 @@ def run() -> dict[str, Any]:
         prior_documents = dataset[:next(i for i, previous in enumerate(dataset) if previous["id"] == doc["id"])]
         rules = validate_document(doc, prediction["fields"], prediction["line_items"], known_documents=prior_documents)
         required = required_fields(doc["type"])
-        routing_records[doc["split"]].append({"document_id": doc["id"],
+        routing_records[doc["split"]].append({"document_id": doc["id"], "source": doc["source"],
             "confidence": document_confidence(doc, prediction), "rules_pass": all(r["status"] in {"pass", "not_applicable"} for r in rules),
             "required_present": bool(required) and all(prediction["fields"].get(f, {}).get("value") is not None for f in required),
             "correct": score_document(doc, prediction)["document_success"] == 1 and not doc.get("defects")})
@@ -123,6 +149,15 @@ def run() -> dict[str, Any]:
                        "auto_approval_error": proportion_interval(sum(not r["correct"] for r in approved), len(approved),
                                                                     "No auto-approved test documents"),
                        "correctness": "All required normalized fields correct and no planted business defect"})
+    operating["by_source"] = []
+    for source in ("generated", "cord"):
+        population_records = [r for r in routing_records["test"] if r["source"] == source]
+        population_approved = [r for r in approved if r["source"] == source]
+        operating["by_source"].append({"source": source, "n": len(population_records),
+            "auto_approved": len(population_approved),
+            "review_rate": proportion_interval(len(population_records) - len(population_approved), len(population_records)),
+            "auto_approval_error": proportion_interval(sum(not r["correct"] for r in population_approved), len(population_approved),
+                                                       "No auto-approved documents in this population")})
     rule_scorecard = []
     for rule_id in sorted({r["id"] for r in rules_records}):
         rows = [r for r in rules_records if r["id"] == rule_id and r["source"] == "generated" and r["split"] == "test"]
@@ -132,7 +167,10 @@ def run() -> dict[str, Any]:
         rule_scorecard.append({"id": rule_id, "name": rows[0]["name"], "n": len(rows), "source": "generated",
                                "split": "test", "precision": proportion_interval(tp, fired, "Rule did not fire"),
                                "recall": proportion_interval(tp, expected, "No planted defects for this rule"),
-                               "fired": fired, "expected": expected})
+                               "fired": fired, "expected": expected, "tp": tp, "fp": fired - tp,
+                               "fn": expected - tp, "tn": len(rows) - fired - expected + tp,
+                               "truth": "Injected business defects, including PO amount mismatch caused by wrong total",
+                               "not_evaluable": sum(r["status"] == "not_evaluable" for r in rows)})
     comparisons = []
     for source in ("generated", "cord"):
         for engine in ("gold", "tesseract"):
@@ -153,15 +191,15 @@ def run() -> dict[str, Any]:
                                                                                          output_dict=True, zero_division=0),
                       "population": "Generated invoice/PO images, public CORD receipt images and synthetic letter tokens"}
     print("Computed extraction, calibration, operating point and classification", flush=True)
-    sweep = read_json(ROOT / "data/generated/sweep/annotations.json")
     sweep_records = []
     for document in sweep:
         observation = read_json(ROOT / "results/ocr" / f"{document['id']}.json")
         error = ocr_error(document["tokens"], observation["tokens"])
         for backend in ("rules", "tokens"):
-            extraction = extract(observation["tokens"], document["type"], backend, token_model)
+            extraction = predictions[(document["id"], backend, "tesseract")]
             sweep_records.append({"id": document["id"], "parent_id": document["parent_id"],
-                                  "kind": document["degradation"], "level": document["level"], "backend": backend,
+                                  "kind": document["degradation"], "level": document["level"],
+                                  "level_index": document["level_index"], "backend": backend,
                                   **error, **score_document(document, extraction)})
     degradation = []
     for kind in sorted({r["kind"] for r in sweep_records}):
@@ -169,6 +207,7 @@ def run() -> dict[str, Any]:
             for backend in ("rules", "tokens"):
                 rows = [r for r in sweep_records if r["kind"] == kind and r["level"] == level and r["backend"] == backend]
                 degradation.append({"kind": kind, "level": level, "backend": backend, "n": len(rows),
+                                    "level_index": rows[0]["level_index"],
                                     "field_f1": interval([r["field_f1"] for r in rows]),
                                     "cer": interval([r["cer"] for r in rows]),
                                     "document_success": interval([r["document_success"] for r in rows]),
@@ -188,13 +227,22 @@ def run() -> dict[str, Any]:
                             for split in ("train", "validation", "test")} for source in ("generated", "cord")},
         "extraction": extraction_table, "per_field": per_field, "ocr": ocr_table, "operating_point": operating,
         "calibration": calibration_table, "degradation": degradation, "degradation_floors": floors,
+        "degradation_policy": {"field_f1_floor": .8, "levels_per_type": 5, "source": "generated", "split": "test",
+                               "independent_documents_per_level": 24,
+                               "protocol": "All 24 generated test parents at each preselected severity; no level tuning on test"},
+        "calibration_protocol": {"fitted_on": "validation", "generated_parents": 24, "cord_parents": 100,
+                                 "generated_variants": len([d for d in calibration_variants if d["level_index"] > 0]),
+                                 "test_variants": len([d for d in sweep if d["level_index"] > 0]),
+                                 "method": "Per-backend, per-population, per-field isotonic regression; missing values fail closed. "
+                                           "Generated reliability intervals resample parent documents, retaining their variants. "
+                                           "Routing is selected and reported on the original document populations."},
         "classification": classification, "rules": rule_scorecard, "comparisons": comparisons,
         "optional_vision": {"available": False, "reason": "No paid vision model configured; not evaluated"},
         "latency": {"ocr_ms": interval([observations[d["id"]]["elapsed_ms"] for d in test]),
                     "method": "Tesseract subprocess wall time in 4-worker local Docker batch; not API load latency"},
     }
     manifest["scope"]["limitations"] = [
-        "Bounded CORD subset, not the full benchmark: first-shard seeded training sample and first validation/test rows.",
+        "Full original CORD 800/100/100 splits are used, with a project-specific subtotal/tax/total and line-item mapping, not the official benchmark metric.",
         "Generated invoices share four templates; performance does not establish generalization to unseen vendors or layouts.",
         "Small test populations give wide intervals; the chosen costs are illustrative (review 1, wrong approval 20).",
         "CORD gold words cover annotated semantic lines; full-page OCR CER/WER includes unannotated text.",
@@ -204,6 +252,7 @@ def run() -> dict[str, Any]:
         "Extraction measurements condition on the reference document type; document classification is measured separately.",
         "No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.",
         "Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.",
+        "Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.",
     ]
     write_json(ROOT / "results/manifest.json", manifest)
     pd.DataFrame([{k: v for k, v in r.items() if k != "fields"} for r in scored]).to_parquet(ROOT / "results/extraction.parquet", index=False)
@@ -212,7 +261,8 @@ def run() -> dict[str, Any]:
     from packages.pipeline import process_document, retrain_from_corrections
     corrected = [d for d in dataset if d["split"] == "validation" and d["source"] == "generated"][:8]
     corrections = [{"document": {**d, "tokens": observations[d["id"]]["tokens"]},
-                    "fields": {f: d[f] for f in FIELDS if f in d}, "line_items": d["line_items"]} for d in corrected]
+                    "fields": {f: d[f] for f in FIELDS if f in d}, "line_items": d["line_items"],
+                    "provenance": {"kind": "simulated_ground_truth"}} for d in corrected]
     manifest["retrain"] = retrain_from_corrections(corrections)
     candidate_path = ROOT / "results/models/retrained-demo.pkl"
     shutil.copy2(ROOT / manifest["retrain"]["model_path"], candidate_path)

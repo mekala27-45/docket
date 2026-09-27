@@ -185,7 +185,8 @@ Public Indonesian receipts and generated invoices do not reproduce an organizati
 
 {limitations}
 '''
-    for name in ['ocr', 'calibration', 'classification', 'rules', 'degradation', 'retrain']:
+    for name in ['ocr', 'calibration_protocol', 'calibration', 'classification', 'rules', 'degradation_policy',
+                 'degradation', 'degradation_floors', 'retrain']:
         block = '\n\n## ' + name.replace('_', ' ').title() + '\n\n```json\n'
         block += json.dumps(e.get(name, {'status': 'not_measured'}), indent=2, ensure_ascii=False) + '\n```\n'
         results += block

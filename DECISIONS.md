@@ -52,4 +52,16 @@ The browser explorer uses SQLite WASM over the small recorded JSON corpus. The P
 
 An absent amount is null, not zero. Corrected fields carry human-review provenance, with their original model confidence retained separately. Duplicate checks compare independent earlier records; generator defect labels cannot cause a rule to fire.
 
+## 2026-09-27: Reverse the bounded CORD import
+
+The audit exposed the limits of a first-shard training sample and small evaluation populations. Import every original CORD partition with a pinned source revision and retain its original membership. Larger coverage strengthens the measurement; it does not guarantee that the learned extractor will beat rules. Do not tune model choices on the expanded test results.
+
+## 2026-09-27: Calibrate imperfect pages without crossing parent splits
+
+Clean generated validation pages cannot establish behavior on damaged scans. Add preselected degradations of validation parents to calibration, then report reliability on different test parents. Keep receipt and generated calibration populations separate and count independent parents alongside image variants. Preserve empirical confidence values, including unfavorable results, rather than adding artificial variation to the interface.
+
+## 2026-09-27: Reaffirm the selected hosting scope
+
+After reading the audit, the owner again selected GitHub Pages-only and requested benchmark and product fixes. The release retains the recorded browser session and optional local API. No hosted API URL or human-correction improvement is claimed without a deployed service and actual reviewed examples.
+
 Demonstration documents only. Generated invoices contain fictional vendors and transactions. Public CORD receipts are attributed separately.
