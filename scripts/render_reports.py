@@ -28,7 +28,7 @@ def validate_manifest(value: Any) -> dict[str, Any]:
         for metric in ['field_f1', 'exact_match', 'document_success', 'line_item_f1']:
             entry = row.get(metric)
             if not isinstance(entry, dict):
-                raise ValueError(f'Missing interval for {metric}')
+                raise TypeError(f'Missing interval for {metric}')
             if entry.get('value') is None and entry.get('reason'):
                 continue
             estimate, ci = entry.get('value'), entry.get('ci')

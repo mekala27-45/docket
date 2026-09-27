@@ -12,7 +12,7 @@ SKIP = {'.git', '.venv', '.venv312', 'node_modules', '.next', 'out', '.cache',
 EXTENSIONS = {'.md', '.py', '.tsx', '.ts', '.css', '.html', '.j2', '.yml'}
 WORDS = ['seam' + 'less', 'del' + 've', 'game' + '-changing', 'revolutio' + 'nary',
          'syner' + 'gy', 'cutting' + '-edge']
-BANNED = re.compile(r'\b(?:' + '|'.join(re.escape(w) for w in WORDS) + r')\b', re.I)
+BANNED = re.compile(r'\b(?:' + '|'.join(re.escape(w) for w in WORDS) + r')\b', re.IGNORECASE)
 
 
 def authored_files(root: Path) -> list[Path]:
