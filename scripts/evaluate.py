@@ -159,7 +159,7 @@ def run() -> dict[str, Any]:
         error = ocr_error(document["tokens"], observation["tokens"])
         for backend in ("rules", "tokens"):
             extraction = extract(observation["tokens"], document["type"], backend, token_model)
-            sweep_records.append({"id": document["id"], "document_id": document["parent_id"],
+            sweep_records.append({"id": document["id"], "parent_id": document["parent_id"],
                                   "kind": document["degradation"], "level": document["level"], "backend": backend,
                                   **error, **score_document(document, extraction)})
     degradation = []
@@ -171,7 +171,7 @@ def run() -> dict[str, Any]:
                                     "field_f1": interval([r["field_f1"] for r in rows]),
                                     "cer": interval([r["cer"] for r in rows]),
                                     "document_success": interval([r["document_success"] for r in rows]),
-                                    "image": f"/data/images/{rows[0]['id']}.png", "document_id": rows[0]["document_id"]})
+                                    "image": f"/data/images/{rows[0]['id']}.png", "document_id": rows[0]["parent_id"]})
     floors = []
     for kind in sorted({r["kind"] for r in degradation}):
         for backend in ("rules", "tokens"):

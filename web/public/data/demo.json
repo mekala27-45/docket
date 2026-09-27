@@ -63977,7 +63977,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-blur-0.png",
-        "document_id": "gen-0072-blur-0"
+        "document_id": "gen-0072"
       },
       {
         "kind": "blur",
@@ -64012,7 +64012,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-blur-0.png",
-        "document_id": "gen-0072-blur-0"
+        "document_id": "gen-0072"
       },
       {
         "kind": "blur",
@@ -64047,7 +64047,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-blur-1.png",
-        "document_id": "gen-0072-blur-1"
+        "document_id": "gen-0072"
       },
       {
         "kind": "blur",
@@ -64082,7 +64082,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-blur-1.png",
-        "document_id": "gen-0072-blur-1"
+        "document_id": "gen-0072"
       },
       {
         "kind": "blur",
@@ -64117,7 +64117,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-blur-2.5.png",
-        "document_id": "gen-0072-blur-2.5"
+        "document_id": "gen-0072"
       },
       {
         "kind": "blur",
@@ -64152,7 +64152,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-blur-2.5.png",
-        "document_id": "gen-0072-blur-2.5"
+        "document_id": "gen-0072"
       },
       {
         "kind": "downscale",
@@ -64187,7 +64187,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-downscale-0.22.png",
-        "document_id": "gen-0072-downscale-0.22"
+        "document_id": "gen-0072"
       },
       {
         "kind": "downscale",
@@ -64222,7 +64222,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-downscale-0.22.png",
-        "document_id": "gen-0072-downscale-0.22"
+        "document_id": "gen-0072"
       },
       {
         "kind": "downscale",
@@ -64257,7 +64257,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-downscale-0.5.png",
-        "document_id": "gen-0072-downscale-0.5"
+        "document_id": "gen-0072"
       },
       {
         "kind": "downscale",
@@ -64292,7 +64292,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-downscale-0.5.png",
-        "document_id": "gen-0072-downscale-0.5"
+        "document_id": "gen-0072"
       },
       {
         "kind": "downscale",
@@ -64327,7 +64327,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-downscale-1.png",
-        "document_id": "gen-0072-downscale-1"
+        "document_id": "gen-0072"
       },
       {
         "kind": "downscale",
@@ -64362,7 +64362,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-downscale-1.png",
-        "document_id": "gen-0072-downscale-1"
+        "document_id": "gen-0072"
       },
       {
         "kind": "jpeg",
@@ -64397,7 +64397,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-jpeg-8.png",
-        "document_id": "gen-0072-jpeg-8"
+        "document_id": "gen-0072"
       },
       {
         "kind": "jpeg",
@@ -64432,7 +64432,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-jpeg-8.png",
-        "document_id": "gen-0072-jpeg-8"
+        "document_id": "gen-0072"
       },
       {
         "kind": "jpeg",
@@ -64467,7 +64467,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-jpeg-35.png",
-        "document_id": "gen-0072-jpeg-35"
+        "document_id": "gen-0072"
       },
       {
         "kind": "jpeg",
@@ -64502,7 +64502,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-jpeg-35.png",
-        "document_id": "gen-0072-jpeg-35"
+        "document_id": "gen-0072"
       },
       {
         "kind": "jpeg",
@@ -64537,7 +64537,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-jpeg-95.png",
-        "document_id": "gen-0072-jpeg-95"
+        "document_id": "gen-0072"
       },
       {
         "kind": "jpeg",
@@ -64572,7 +64572,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-jpeg-95.png",
-        "document_id": "gen-0072-jpeg-95"
+        "document_id": "gen-0072"
       },
       {
         "kind": "noise",
@@ -64607,7 +64607,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-noise-0.png",
-        "document_id": "gen-0072-noise-0"
+        "document_id": "gen-0072"
       },
       {
         "kind": "noise",
@@ -64642,7 +64642,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-noise-0.png",
-        "document_id": "gen-0072-noise-0"
+        "document_id": "gen-0072"
       },
       {
         "kind": "noise",
@@ -64677,7 +64677,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-noise-15.png",
-        "document_id": "gen-0072-noise-15"
+        "document_id": "gen-0072"
       },
       {
         "kind": "noise",
@@ -64712,7 +64712,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-noise-15.png",
-        "document_id": "gen-0072-noise-15"
+        "document_id": "gen-0072"
       },
       {
         "kind": "noise",
@@ -64747,7 +64747,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-noise-40.png",
-        "document_id": "gen-0072-noise-40"
+        "document_id": "gen-0072"
       },
       {
         "kind": "noise",
@@ -64782,7 +64782,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-noise-40.png",
-        "document_id": "gen-0072-noise-40"
+        "document_id": "gen-0072"
       },
       {
         "kind": "photograph",
@@ -64817,7 +64817,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-photograph-0.png",
-        "document_id": "gen-0072-photograph-0"
+        "document_id": "gen-0072"
       },
       {
         "kind": "photograph",
@@ -64852,7 +64852,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-photograph-0.png",
-        "document_id": "gen-0072-photograph-0"
+        "document_id": "gen-0072"
       },
       {
         "kind": "photograph",
@@ -64887,7 +64887,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-photograph-0.7.png",
-        "document_id": "gen-0072-photograph-0.7"
+        "document_id": "gen-0072"
       },
       {
         "kind": "photograph",
@@ -64922,7 +64922,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-photograph-0.7.png",
-        "document_id": "gen-0072-photograph-0.7"
+        "document_id": "gen-0072"
       },
       {
         "kind": "photograph",
@@ -64957,7 +64957,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-photograph-1.5.png",
-        "document_id": "gen-0072-photograph-1.5"
+        "document_id": "gen-0072"
       },
       {
         "kind": "photograph",
@@ -64992,7 +64992,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-photograph-1.5.png",
-        "document_id": "gen-0072-photograph-1.5"
+        "document_id": "gen-0072"
       },
       {
         "kind": "skew",
@@ -65027,7 +65027,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-skew-0.png",
-        "document_id": "gen-0072-skew-0"
+        "document_id": "gen-0072"
       },
       {
         "kind": "skew",
@@ -65062,7 +65062,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-skew-0.png",
-        "document_id": "gen-0072-skew-0"
+        "document_id": "gen-0072"
       },
       {
         "kind": "skew",
@@ -65097,7 +65097,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-skew-3.png",
-        "document_id": "gen-0072-skew-3"
+        "document_id": "gen-0072"
       },
       {
         "kind": "skew",
@@ -65132,7 +65132,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-skew-3.png",
-        "document_id": "gen-0072-skew-3"
+        "document_id": "gen-0072"
       },
       {
         "kind": "skew",
@@ -65167,7 +65167,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-skew-7.png",
-        "document_id": "gen-0072-skew-7"
+        "document_id": "gen-0072"
       },
       {
         "kind": "skew",
@@ -65202,7 +65202,7 @@
           "method": "document bootstrap, 500 replicates, seed 11027, 95% percentile"
         },
         "image": "/data/images/gen-0072-skew-7.png",
-        "document_id": "gen-0072-skew-7"
+        "document_id": "gen-0072"
       }
     ],
     "degradation_floors": [
