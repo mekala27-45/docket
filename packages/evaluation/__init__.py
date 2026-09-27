@@ -62,13 +62,13 @@ def score_document(document: dict[str, Any], extraction: dict[str, Any]) -> dict
     document_evaluable = bool(required) and all(normalize(document.get(f), f) for f in required)
     success = int(all(matches(values.get(f, {}).get("value"), document[f], f) for f in required)) if document_evaluable else None
     row_truth = document.get("line_items")
-    rows_evaluable = row_truth is not None and (bool(row_truth) or document["source"] != "cord")
+    row_score = score_rows(extraction.get("line_items", []), row_truth) if isinstance(row_truth, list) and (bool(row_truth) or document["source"] != "cord") else None
     return {"document_id": document["id"], "field_f1": 2 * tp / denominator if fields else None,
             "precision": (tp / predicted if predicted else 0) if fields else None,
             "recall": tp / len(fields) if fields else None,
             "exact_match": sum(exact) / len(exact) if exact else None, "document_success": success,
             "reference_fields": len(fields), "document_evaluable": document_evaluable,
-            "line_item_f1": score_rows(extraction.get("line_items", []), row_truth) if rows_evaluable else None,
+            "line_item_f1": row_score,
             "fields": results}
 
 
