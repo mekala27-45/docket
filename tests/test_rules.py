@@ -36,9 +36,30 @@ def test_rule_refuses_empty(rule):
 
 def test_independent_duplicate_evidence(clean):
     doc, fields, rows = clean
-    other = {"id": "b", "vendor": fields["vendor"], "number": fields["number"]}
+    other = {"id": "b", "vendor": fields["vendor"], "number": fields["number"], "total": fields["total"]}
     result = validate_document(doc, fields, rows, known_documents=[other])
     assert result[-1]["status"] == "fail"
+
+
+def test_line_extension_must_reconcile(clean):
+    doc, fields, _ = clean
+    results = validate_document(doc, fields, [{"amount": 10, "quantity": 2, "unit_price": 6}])
+    assert results[0]["status"] == "fail"
+
+
+def test_date_window_is_deterministic(clean):
+    doc, fields, rows = clean
+    doc["as_of"] = "2025-12-31"
+    assert validate_document(doc, fields, rows)[1]["status"] == "fail"
+
+
+def test_currency_and_po_master_checks(clean):
+    doc, fields, rows = clean
+    doc["vendor_currencies"] = {"Example Supplies": "EUR"}
+    doc["po_reference"] = {"number": "PO-123", "total": 12}
+    results = validate_document(doc, fields, rows)
+    assert results[2]["status"] == "fail"
+    assert results[4]["status"] == "fail"
 
 
 def test_amount_rejects_nonfinite():

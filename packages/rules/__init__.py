@@ -57,6 +57,12 @@ def validate_document(
     else:
         row_sum = sum((row for row in rows if row is not None), Decimal(0))
         valid = abs(subtotal + tax - total) <= Decimal("0.02") and abs(row_sum - subtotal) <= Decimal("0.02")
+        for row in line_items:
+            quantity, unit, row_amount = (amount(row.get(key)) for key in ("quantity", "unit_price", "amount"))
+            if "quantity" in row or "unit_price" in row:
+                valid &= quantity is not None and unit is not None and row_amount is not None
+                if quantity is not None and unit is not None and row_amount is not None:
+                    valid &= abs(quantity * unit - row_amount) <= Decimal("0.02")
         add("arithmetic", "pass" if valid else "fail", "Subtotal plus tax and line sum must reconcile within 0.02.")
 
     try:
@@ -65,11 +71,18 @@ def validate_document(
         valid_date = not due_value or date.fromisoformat(str(due_value)) >= issued
         if document.get("type") == "invoice" and not due_value:
             valid_date = False
+        if document.get("as_of"):
+            as_of = date.fromisoformat(str(document["as_of"]))
+            valid_date &= 0 <= (as_of - issued).days <= int(document.get("max_age_days", 730))
         add("dates", "pass" if valid_date else "fail", "An invoice needs a due date on or after its issue date.")
     except ValueError:
         add("dates", "fail", "A valid ISO issue date is required.")
 
     valid_currency = str(values.get("currency", "")).upper() in SUPPORTED_CURRENCIES
+    vendor_currencies = document.get("vendor_currencies", {})
+    expected_currency = vendor_currencies.get(str(values.get("vendor", "")))
+    if expected_currency:
+        valid_currency &= values.get("currency") == expected_currency
     add("currency", "pass" if valid_currency else "fail", "Currency must be a supported ISO currency code.")
 
     vendor = str(values.get("vendor") or "").strip().casefold()
@@ -79,11 +92,17 @@ def validate_document(
     add("vendor", "pass" if valid_vendor else "fail", "Extracted vendor must match the supplied vendor master.")
 
     po_value = str(values.get("po_number") or "").strip()
-    po_reference = str(document.get("po_number") or "").strip()
+    reference = document.get("po_reference", {})
+    po_reference = str(reference.get("number", document.get("po_number")) or "").strip()
     if document.get("type") == "receipt" and values:
         add("purchase_order", "not_applicable", "Receipts do not require a purchase order.")
     else:
         valid_po = bool(po_value and po_reference and po_value == po_reference)
+        if reference.get("total") is not None:
+            expected_total = amount(reference["total"])
+            valid_po &= expected_total is not None and total is not None
+            if expected_total is not None and total is not None:
+                valid_po &= abs(expected_total - total) <= Decimal("0.02")
         add("purchase_order", "pass" if valid_po else "fail", "Purchase order must match the supplied PO record.")
 
     number = str(values.get("number") or "").strip().casefold()
@@ -92,7 +111,8 @@ def validate_document(
         if other.get("id") == document.get("id"):
             continue
         if number and vendor and number == str(other.get("number") or "").strip().casefold():
-            duplicate |= vendor == str(other.get("vendor") or "").strip().casefold()
+            other_total = amount(other.get("total"))
+            duplicate |= vendor == str(other.get("vendor") or "").strip().casefold() and total is not None and other_total is not None and abs(total - other_total) <= Decimal("0.02")
         first, second = document.get("perceptual_hash"), other.get("perceptual_hash")
         if first and second:
             duplicate |= perceptual_hash_distance(str(first), str(second)) <= 3
