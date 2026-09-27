@@ -34,7 +34,16 @@ import {
   X,
 } from "lucide-react";
 import type { Bundle, Connection, DocumentItem, PageName } from "@/lib/types";
-import { BASE, asset, label, lowest, money, pct } from "@/lib/types";
+import {
+  BASE,
+  asset,
+  label,
+  displayedConfidence,
+  priorityAmount,
+  comparePriority,
+  money,
+  pct,
+} from "@/lib/types";
 import { Reviewer } from "./reviewer";
 import { Evaluation, Explore, Lab, Models, Report, Rules } from "./sections";
 
@@ -175,7 +184,13 @@ export function Workbench({ page }: { page: PageName }) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${connection.token}`,
           },
-          body: JSON.stringify({ fields, line_items: items, decision, reason }),
+          body: JSON.stringify({
+            fields,
+            line_items: items,
+            decision,
+            reason,
+            review_source: "human",
+          }),
         },
       );
       if (!response.ok)
@@ -551,9 +566,8 @@ function InboxPage({
           sort === "vendor"
             ? a.vendor.localeCompare(b.vendor)
             : sort === "confidence"
-              ? lowest(a) - lowest(b)
-              : a.currency.localeCompare(b.currency) ||
-                (b.risk ?? b.total ?? 0) - (a.risk ?? a.total ?? 0),
+              ? (displayedConfidence(a) ?? -1) - (displayedConfidence(b) ?? -1)
+              : comparePriority(a, b),
         ),
     [docs, tab, type, search, sort, source],
   );
@@ -562,7 +576,9 @@ function InboxPage({
     (pageIndex + 1) * PAGE_SIZE,
   );
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const next = waiting.find((d) => !d.source?.includes("cord")) || waiting[0];
+  const next =
+    filtered.find((d) => d.status === "needs_review") ||
+    [...waiting].sort(comparePriority)[0];
   const failedCount = waiting.filter((d) =>
     d.rules.some((r) => r.status === "fail"),
   ).length;
@@ -683,6 +699,12 @@ function InboxPage({
           <div className="stat-caption">
             {interval(op?.auto_approval_error)}
           </div>
+          {typeof op?.unlabeled_auto_approved === "number" &&
+            op.unlabeled_auto_approved > 0 && (
+              <div className="stat-warning">
+                {op.unlabeled_auto_approved} unlabeled approvals excluded
+              </div>
+            )}
         </div>
       </div>
       <div className="evidence-strip">
@@ -780,7 +802,7 @@ function InboxPage({
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
               >
-                <option value="risk">Currency, then risk</option>
+                <option value="risk">Currency, priority, rules</option>
                 <option value="confidence">Lowest confidence</option>
                 <option value="vendor">Vendor A to Z</option>
               </select>
@@ -826,7 +848,8 @@ function InboxPage({
             <tbody>
               {paged.map((doc) => {
                 const failed = doc.rules.filter((r) => r.status === "fail");
-                const confidence = lowest(doc);
+                const confidence = displayedConfidence(doc);
+                const priority = priorityAmount(doc);
                 return (
                   <tr key={doc.id}>
                     <td className="check-cell">
@@ -893,16 +916,20 @@ function InboxPage({
                     </td>
                     <td>
                       <div
-                        className={`confidence-inline ${confidence < 0.8 ? "low" : ""}`}
+                        className={`confidence-inline ${confidence != null && confidence < 0.8 ? "low" : ""}`}
                       >
-                        <span className="confidence-meter">
-                          <span style={{ width: `${confidence * 100}%` }} />
-                        </span>
+                        {confidence != null && (
+                          <span className="confidence-meter">
+                            <span style={{ width: `${confidence * 100}%` }} />
+                          </span>
+                        )}
                         <strong>
                           {doc.status === "accepted" ||
                           doc.status === "rejected"
                             ? "Reviewed"
-                            : pct(confidence)}
+                            : confidence == null
+                              ? "Unknown"
+                              : pct(confidence)}
                         </strong>
                       </div>
                       <small className="cell-secondary confidence-note">
@@ -936,10 +963,17 @@ function InboxPage({
                       <span
                         className={`table-amount ${failed.length ? "risk-amount" : ""}`}
                       >
-                        {money(
-                          doc.risk ??
-                            (doc.status === "needs_review" ? doc.total : 0),
-                          doc.currency,
+                        {priority == null
+                          ? "Unavailable"
+                          : money(priority, doc.currency)}
+                        {priority == null && (
+                          <small className="cell-secondary">
+                            {doc.total == null
+                              ? "Total missing"
+                              : !/^[A-Z]{3}$/.test(doc.currency || "")
+                                ? "Currency unknown"
+                                : "Score not recorded"}
+                          </small>
                         )}
                       </span>
                     </td>
@@ -1041,7 +1075,9 @@ function InboxPage({
           : "in the committed manifest"}{" "}
         · Operating point chosen on validation, reported on test. Priority
         amount is total × (1 − lowest required-field confidence), in native
-        currency; zero does not mean business rules passed.{" "}
+        currency; zero does not mean business rules passed. Within each
+        currency, missing priority amounts are shown first, then recorded
+        priority descending, then more rule failures break ties.{" "}
         <Link href="/evaluation/">View population and methods</Link>
       </div>
     </>

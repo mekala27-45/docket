@@ -18,12 +18,36 @@ import {
   ShieldCheck,
   Table2,
 } from "lucide-react";
-import { BASE, asset, label, money, pct } from "@/lib/types";
+import {
+  BASE,
+  asset,
+  label,
+  money,
+  pct,
+  displayedConfidence,
+  priorityAmount,
+} from "@/lib/types";
 import type { DocumentItem } from "@/lib/types";
 import { Status } from "./workbench";
+import {
+  DegradationOverview,
+  DegradationChart,
+  RuleBenchmark,
+  ObservedMetric,
+  RoutingBreakdown,
+  RetrainEvidence,
+  type RetrainRun,
+  type RoutingPopulation,
+  orderedLevels,
+  type SweepRow,
+  type SweepFloor,
+  type RuleScore,
+  type Measurement,
+  type DegradationParameter,
+} from "./benchmark";
 
 type Manifest = Record<string, unknown>;
-type Measured = { value: number | null; ci?: number[]; reason?: string };
+type Measured = Measurement;
 interface EvalRow {
   source: string;
   backend: string;
@@ -52,38 +76,34 @@ interface Operating {
   n: number;
   auto_approved: number;
   curve: RatePoint[];
+  by_source?: RoutingPopulation[];
+  unlabeled_test_documents?: number;
+  unlabeled_validation_documents?: number;
+  unlabeled_auto_approved?: number;
 }
 interface Cal {
   field: string;
   backend: string;
+  population?: string;
+  independent_documents?: number;
+  scope?: string;
   n: number;
   ece_before: number;
   ece_after: number;
-  bins: { confidence: number; accuracy: number; count: number }[];
+  bins: {
+    confidence: number;
+    accuracy: number;
+    count: number;
+    ci?: [number, number];
+    interval_method?: string;
+  }[];
 }
-interface Degradation {
-  kind: string;
-  level: number;
-  backend: string;
-  n: number;
-  field_f1: number | Measured;
-  cer: number;
-  image?: string;
-  document_id?: string;
-}
+type Degradation = SweepRow;
+
 function metric(m: Measured | undefined) {
-  if (!m || m.value == null) return <span className="muted">Not measured</span>;
-  return (
-    <>
-      <strong>{pct(m.value)}</strong>
-      {m.ci && (
-        <small className="metric-interval">
-          {pct(m.ci[0])} to {pct(m.ci[1])}
-        </small>
-      )}
-    </>
-  );
+  return <ObservedMetric measurement={m} denominator />;
 }
+
 function numeric(v: unknown): number | null {
   if (typeof v === "number") return v;
   if (v && typeof v === "object" && "value" in v)
@@ -178,8 +198,9 @@ export function Evaluation({ evaluation }: { evaluation: Manifest }) {
   const calibration = (evaluation.calibration || []) as Cal[];
   const [calField, setCalField] = useState("");
   const selectedCal =
-    calibration.find((c) => `${c.backend}:${c.field}` === calField) ||
-    calibration[0];
+    calibration.find(
+      (c) => `${c.backend}:${c.population || "all"}:${c.field}` === calField,
+    ) || calibration[0];
   const classification = evaluation.classification as
     | {
         labels: string[];
@@ -188,7 +209,7 @@ export function Evaluation({ evaluation }: { evaluation: Manifest }) {
         n: number;
       }
     | undefined;
-  const retrain = evaluation.retrain as Record<string, unknown> | undefined;
+  const retrain = evaluation.retrain as RetrainRun | undefined;
   return (
     <>
       <PageHeading
@@ -316,8 +337,25 @@ export function Evaluation({ evaluation }: { evaluation: Manifest }) {
               </div>
               <p className="section-caption">
                 Test population n={op.n}; auto-approved n={op.auto_approved}. An
-                empty approved set has no measured error rate.
+                empty approved set has no measured error rate. Review rate
+                includes all documents; approval error uses only approved
+                documents with evaluable reference labels.
+                {op.unlabeled_test_documents != null && (
+                  <>
+                    {" "}
+                    {op.unlabeled_test_documents} test documents lack required
+                    reference labels.
+                  </>
+                )}
               </p>
+              {!!op.unlabeled_auto_approved && (
+                <p className="benchmark-warning">
+                  {op.unlabeled_auto_approved} automatically approved documents
+                  lack required reference labels and are excluded from the error
+                  estimate. Their correctness is unknown.
+                </p>
+              )}
+              <RoutingBreakdown rows={op.by_source || []} />
             </>
           ) : (
             <Unavailable />
@@ -335,27 +373,39 @@ export function Evaluation({ evaluation }: { evaluation: Manifest }) {
               <select
                 className="plain-select calibration-select"
                 aria-label="Calibration field"
-                value={`${selectedCal.backend}:${selectedCal.field}`}
+                value={`${selectedCal.backend}:${selectedCal.population || "all"}:${selectedCal.field}`}
                 onChange={(e) => setCalField(e.target.value)}
               >
                 {calibration.map((c) => (
                   <option
-                    key={`${c.backend}:${c.field}`}
-                    value={`${c.backend}:${c.field}`}
+                    key={`${c.backend}:${c.population || "all"}:${c.field}`}
+                    value={`${c.backend}:${c.population || "all"}:${c.field}`}
                   >
-                    {label(c.field)} · {c.backend}
+                    {label(c.field)} · {c.backend} ·{" "}
+                    {label(c.population || "all")}
                   </option>
                 ))}
               </select>
               <CalibrationChart cal={selectedCal} />
               <div className="chart-callout">
                 <strong>
-                  {label(selectedCal.field)} · held-out n={selectedCal.n}
+                  {label(selectedCal.field)} ·{" "}
+                  {label(selectedCal.population || "all")} · held-out n=
+                  {selectedCal.n} field observations
                 </strong>
                 <p>
+                  {selectedCal.independent_documents != null && (
+                    <>
+                      {selectedCal.independent_documents} independent documents;{" "}
+                      {label(selectedCal.scope || "original")} population.{" "}
+                    </>
+                  )}
                   Expected calibration error: {pct(selectedCal.ece_before)}{" "}
                   before, {pct(selectedCal.ece_after)} after. Each bin compares
-                  reported confidence with observed correctness.
+                  reported confidence with observed correctness. Interval bars
+                  preserve uncertainty across independent document parents;
+                  repeated degraded variants do not create independent
+                  documents.
                 </p>
               </div>
             </>
@@ -451,32 +501,7 @@ export function Evaluation({ evaluation }: { evaluation: Manifest }) {
               <h2>Did review help the model?</h2>
             </div>
           </div>
-          {retrain ? (
-            <>
-              <div className="retrain-flow">
-                <div>
-                  <span>Before retraining</span>
-                  {metric(retrain.before as Measured)}
-                </div>
-                <ArrowRight size={26} />
-                <div>
-                  <span>After retraining</span>
-                  {metric(retrain.after as Measured)}
-                </div>
-              </div>
-              <p className="section-caption">
-                {asText(retrain.corrections_used)} recorded corrections used.{" "}
-                {asText(
-                  retrain.correction_source ||
-                    retrain.method ||
-                    retrain.reason ||
-                    "The browser practice queue is separate from this recorded experiment.",
-                )}
-              </p>
-            </>
-          ) : (
-            <Unavailable />
-          )}
+          {retrain ? <RetrainEvidence run={retrain} /> : <Unavailable />}
         </section>
       </div>
       <Pushback />
@@ -618,7 +643,9 @@ function CurveChart({
 }
 function CalibrationChart({ cal }: { cal: Cal }) {
   const [table, setTable] = useState(false);
-  const bins = cal.bins.filter((b) => b.count > 0);
+  const bins = cal.bins
+    .filter((b) => b.count > 0)
+    .sort((a, b) => a.confidence - b.confidence);
   const maxCount = Math.max(1, ...bins.map((b) => b.count));
   return (
     <div className="chart-block">
@@ -636,7 +663,19 @@ function CalibrationChart({ cal }: { cal: Cal }) {
             {bins.map((b, i) => (
               <tr key={i}>
                 <td>{pct(b.confidence)}</td>
-                <td>{pct(b.accuracy)}</td>
+                <td>
+                  {pct(b.accuracy)}
+                  {b.ci && (
+                    <small className="metric-interval">
+                      95% CI {pct(b.ci[0])} to {pct(b.ci[1])}
+                    </small>
+                  )}
+                  {b.interval_method && (
+                    <small className="metric-interval">
+                      {b.interval_method}
+                    </small>
+                  )}
+                </td>
                 <td>{b.count}</td>
               </tr>
             ))}
@@ -678,6 +717,15 @@ function CalibrationChart({ cal }: { cal: Cal }) {
           />
           {bins.map((b, i) => (
             <g key={i}>
+              {b.ci && (
+                <line
+                  className="calibration-interval"
+                  x1={50 + b.confidence * 400}
+                  x2={50 + b.confidence * 400}
+                  y1={205 - b.ci[0] * 170}
+                  y2={205 - b.ci[1] * 170}
+                />
+              )}
               <circle
                 className="curve-dot"
                 tabIndex={0}
@@ -685,7 +733,7 @@ function CalibrationChart({ cal }: { cal: Cal }) {
                 cy={205 - b.accuracy * 170}
                 r="5"
               >
-                <title>{`Of 100 fields in the ${pct(b.confidence)} confidence band, about ${Math.round(b.accuracy * 100)} were correct (n=${b.count}).`}</title>
+                <title>{`Of 100 fields in the ${pct(b.confidence)} confidence band, about ${Math.round(b.accuracy * 100)} were correct (n=${b.count} field observations).${b.ci ? ` 95% interval ${pct(b.ci[0])} to ${pct(b.ci[1])}.` : ""}`}</title>
               </circle>
               <rect
                 className="hist-bar"
@@ -752,14 +800,16 @@ export function Rules({
           <strong>Every required check must pass before auto-approval.</strong>
           <p>
             A high-confidence field cannot override a failed rule. The counts
-            below are computed from the recorded queue.
+            below are computed from the recorded queue. Detection quality is
+            measured separately against known defects.
           </p>
         </div>
       </div>
+      <RuleBenchmark rows={(evaluation.rules || []) as RuleScore[]} />
       <section className="panel section-panel">
         <div className="section-heading">
           <div>
-            <h2>Business rule scorecard</h2>
+            <h2>Current queue outcomes</h2>
             <p>
               {documents.length} demonstration documents in the current queue
             </p>
@@ -775,48 +825,50 @@ export function Rules({
             <option value="pass">Rules with passes</option>
           </select>
         </div>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>RULE</th>
-              <th>PASSED</th>
-              <th>FLAGGED</th>
-              <th>NOT APPLICABLE</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((rule) => {
-              const outcomes = documents.flatMap((d) =>
-                d.rules.filter((r) => r.id === rule.id),
-              );
-              return (
-                <tr key={rule.id}>
-                  <td>
-                    <strong>{rule.name}</strong>
-                    <small className="mono">{rule.id}</small>
-                  </td>
-                  <td>
-                    <span className="rule-pass">
-                      <Check size={13} />
-                      {outcomes.filter((r) => r.status === "pass").length}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="rule-pill">
-                      {outcomes.filter((r) => r.status === "fail").length}
-                    </span>
-                  </td>
-                  <td>
-                    {
-                      outcomes.filter((r) => r.status === "not_applicable")
-                        .length
-                    }
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>RULE</th>
+                <th>PASSED</th>
+                <th>FLAGGED</th>
+                <th>NOT APPLICABLE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((rule) => {
+                const outcomes = documents.flatMap((d) =>
+                  d.rules.filter((r) => r.id === rule.id),
+                );
+                return (
+                  <tr key={rule.id}>
+                    <td>
+                      <strong>{rule.name}</strong>
+                      <small className="mono">{rule.id}</small>
+                    </td>
+                    <td>
+                      <span className="rule-pass">
+                        <Check size={13} />
+                        {outcomes.filter((r) => r.status === "pass").length}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="rule-pill">
+                        {outcomes.filter((r) => r.status === "fail").length}
+                      </span>
+                    </td>
+                    <td>
+                      {
+                        outcomes.filter((r) => r.status === "not_applicable")
+                          .length
+                      }
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
       <div className="rule-cards">
         {definitions.map((rule) => (
@@ -913,6 +965,16 @@ export function Models({ evaluation }: { evaluation: Manifest }) {
             <Link className="button full-width" href="/evaluation/">
               Inspect measured results <ArrowRight size={14} />
             </Link>
+            {["rules", "tokens"].includes(backend) && (
+              <a
+                className="model-card-link"
+                href={`https://github.com/mekala27-45/docket/blob/main/docs/model-cards/${backend}.md`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Read the model card <ArrowRight size={14} />
+              </a>
+            )}
           </section>
         ))}
       </div>
@@ -949,36 +1011,52 @@ export function Lab({
   documents: DocumentItem[];
   evaluation: Manifest;
 }) {
-  const generated = documents.filter((d) => !d.source?.includes("cord"));
   const sweeps = (evaluation.degradation || []) as Degradation[];
+  const floors = (evaluation.degradation_floors || []) as SweepFloor[];
+  const policy = evaluation.degradation_policy as
+    | {
+        field_f1_floor?: number;
+        parameters?: Record<string, DegradationParameter>;
+      }
+    | undefined;
+  const floor = policy?.field_f1_floor ?? floors[0]?.floor;
+  const recordedIds = new Set(
+    sweeps.filter((s) => s.image && s.document_id).map((s) => s.document_id),
+  );
+  const allGenerated = documents.filter((d) => !d.source?.includes("cord"));
+  const generated = allGenerated.filter((d) => recordedIds.has(d.id));
+  const exampleDocuments = generated.length ? generated : allGenerated;
   const kinds = Array.from(new Set(sweeps.map((s) => s.kind)));
   const [docId, setDocId] = useState(sweeps[0]?.document_id || "");
   const [kind, setKind] = useState(kinds[0] || "blur");
   const [level, setLevel] = useState(0);
   const [table, setTable] = useState(false);
-  const doc = generated.find((d) => d.id === docId) || generated[0];
+  const doc =
+    exampleDocuments.find((d) => d.id === docId) || exampleDocuments[0];
   const data = sweeps.filter((s) => s.kind === kind);
-  const levels = Array.from(new Set(data.map((d) => d.level))).sort(
-    (a, b) => a - b,
-  );
+  const levels = orderedLevels(data);
   const actualLevel = levels.includes(level) ? level : levels[0] || 0;
   const current = data.filter((d) => d.level === actualLevel);
   const example = current.find(
     (d) => d.image && (!d.document_id || d.document_id === doc?.id),
   );
-  const filter = kind.includes("blur")
-    ? `blur(${actualLevel}px)`
-    : kind.includes("noise")
-      ? `contrast(${1 + actualLevel * 0.1})`
-      : kind.includes("jpeg")
-        ? "contrast(.92)"
-        : undefined;
   return (
     <>
       <PageHeading
         eyebrow="ROBUSTNESS / KNOWN-TRUTH DOCUMENTS"
         title="Put the page under pressure"
         description="Inspect how scan quality changes extraction against known fields."
+      />
+      <DegradationOverview
+        rows={sweeps}
+        floor={floor}
+        floors={floors}
+        parameters={policy?.parameters}
+        active={kind}
+        onSelect={(selected, selectedLevel) => {
+          setKind(selected);
+          setLevel(selectedLevel);
+        }}
       />
       <div className="lab-controls panel">
         <label className="form-label">
@@ -987,7 +1065,7 @@ export function Lab({
             value={doc?.id || ""}
             onChange={(e) => setDocId(e.target.value)}
           >
-            {generated.map((d) => (
+            {exampleDocuments.map((d) => (
               <option value={d.id} key={d.id}>
                 {d.number} · {d.vendor}
               </option>
@@ -1034,7 +1112,7 @@ export function Lab({
             <h2>
               {example
                 ? "Recorded degraded image"
-                : "Illustrative document preview"}
+                : "Original document reference"}
             </h2>
             <span className="backend-label">
               {label(kind)} {actualLevel}
@@ -1045,23 +1123,13 @@ export function Lab({
               <img
                 src={asset(example?.image || doc.image)}
                 alt={`${label(kind)} document preview`}
-                style={
-                  example
-                    ? {}
-                    : {
-                        filter,
-                        transform: kind.includes("skew")
-                          ? `rotate(${actualLevel}deg)`
-                          : undefined,
-                      }
-                }
               />
             )}
           </div>
           <p className="section-caption">
             {example
               ? "Image saved by the recorded degradation run."
-              : "The visual effect is illustrative. Measured figures at right come from the recorded sweep, not from this browser preview."}
+              : "No saved degraded example is available for this selection. This is the original document; the chart still reports the measured population."}
           </p>
         </section>
         <section className="panel section-panel">
@@ -1100,7 +1168,13 @@ export function Lab({
                   </tbody>
                 </table>
               ) : (
-                <SweepChart data={data} current={actualLevel} />
+                <DegradationChart
+                  rows={data}
+                  current={actualLevel}
+                  kind={kind}
+                  floor={floor}
+                  onSelect={setLevel}
+                />
               )}
               <div className="sweep-level-results">
                 {current.map((d, i) => (
@@ -1142,96 +1216,6 @@ export function Lab({
     </>
   );
 }
-function SweepChart({
-  data,
-  current,
-}: {
-  data: Degradation[];
-  current: number;
-}) {
-  const levels = Array.from(new Set(data.map((d) => d.level))).sort(
-    (a, b) => a - b,
-  );
-  const backends = Array.from(new Set(data.map((d) => d.backend)));
-  const x = (level: number) =>
-    60 + 350 * (levels.indexOf(level) / Math.max(1, levels.length - 1));
-  return (
-    <>
-      <svg
-        className="chart-svg"
-        viewBox="0 0 480 280"
-        role="img"
-        aria-label="Field F1 by degradation level"
-      >
-        {[0, 0.25, 0.5, 0.75, 1].map((t) => (
-          <g key={t}>
-            <line
-              x1="60"
-              x2="430"
-              y1={225 - t * 180}
-              y2={225 - t * 180}
-              className="grid-line"
-            />
-            <text x="49" y={229 - t * 180} textAnchor="end">
-              {Math.round(t * 100)}%
-            </text>
-          </g>
-        ))}
-        {levels.map((l) => (
-          <text key={l} x={x(l)} y="245" textAnchor="middle">
-            {l}
-          </text>
-        ))}
-        <text x="235" y="274" textAnchor="middle" className="axis-title">
-          Degradation level
-        </text>
-        {backends.map((backend, i) => {
-          const rows = data
-            .filter(
-              (d) => d.backend === backend && numeric(d.field_f1) !== null,
-            )
-            .sort((a, b) => a.level - b.level);
-          return (
-            <g key={backend} style={{ color: i ? "#0C9174" : "#4F46C8" }}>
-              <path
-                d={rows
-                  .map(
-                    (d, j) =>
-                      `${j ? "L" : "M"}${x(d.level)},${225 - (numeric(d.field_f1) || 0) * 180}`,
-                  )
-                  .join(" ")}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeDasharray={i ? "6 4" : undefined}
-              />
-              {rows.map((d, j) => (
-                <circle
-                  key={j}
-                  cx={x(d.level)}
-                  cy={225 - (numeric(d.field_f1) || 0) * 180}
-                  r={d.level === current ? 6 : 4}
-                  fill="currentColor"
-                  tabIndex={0}
-                >
-                  <title>{`${backend} at level ${d.level}: field F1 ${pct(numeric(d.field_f1) || 0)}, n=${d.n}`}</title>
-                </circle>
-              ))}
-            </g>
-          );
-        })}
-      </svg>
-      <div className="chart-legend">
-        {backends.map((b, i) => (
-          <span key={b}>
-            <i className={`legend-line ${i ? "dashed green-line" : ""}`} />
-            {label(b)}
-          </span>
-        ))}
-      </div>
-    </>
-  );
-}
 
 export function Explore({ documents }: { documents: DocumentItem[] }) {
   const initial =
@@ -1267,12 +1251,8 @@ export function Explore({ documents }: { documents: DocumentItem[] }) {
             d.currency,
             d.extraction.fields.total?.value == null ? null : d.total,
             d.status,
-            d.risk ?? 0,
-            Math.min(
-              ...Object.values(d.extraction.fields).map(
-                (f) => f.confidence ?? 0,
-              ),
-            ),
+            priorityAmount(d),
+            displayedConfidence(d),
             d.rules.filter((r) => r.status === "fail").length,
           ]),
         );

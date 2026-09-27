@@ -5,6 +5,7 @@ export interface Field {
   reviewed?: boolean;
   model_confidence?: number;
   calibration_sentence?: string;
+  calibration_n?: number;
   box?: Box;
   trace?: { step: string; detail: string }[];
 }
@@ -47,8 +48,8 @@ export interface DocumentItem {
   };
   rules: Rule[];
   status: "needs_review" | "auto_approved" | "accepted" | "rejected";
-  risk?: number;
-  minimum_confidence?: number;
+  risk?: number | null;
+  minimum_confidence?: number | null;
 }
 export interface Metric {
   value?: number | null;
@@ -138,4 +139,62 @@ export function lowest(doc: DocumentItem) {
     .map((f) => f.confidence)
     .filter((c): c is number => typeof c === "number");
   return values.length ? Math.min(...values) : 0;
+}
+
+export function displayedConfidence(doc: DocumentItem): number | null {
+  const required =
+    doc.type === "receipt"
+      ? ["total"]
+      : [
+          "vendor",
+          "number",
+          "date",
+          ...(doc.type === "invoice" ? ["due_date"] : []),
+          "currency",
+          "subtotal",
+          "tax",
+          "total",
+        ];
+  const fields = required.map((name) => doc.extraction.fields[name]);
+  if (
+    fields.some(
+      (field) =>
+        !field ||
+        field.value == null ||
+        field.value === "" ||
+        field.calibration_n === 0 ||
+        (!field.reviewed && field.confidence == null),
+    )
+  )
+    return null;
+  return lowest(doc);
+}
+
+export function priorityAmount(doc: DocumentItem): number | null {
+  if (
+    doc.total == null ||
+    doc.extraction.fields.total?.value == null ||
+    !/^[A-Z]{3}$/.test(doc.currency || "") ||
+    typeof doc.risk !== "number" ||
+    !Number.isFinite(doc.risk)
+  )
+    return null;
+  return doc.risk;
+}
+
+export function comparePriority(a: DocumentItem, b: DocumentItem) {
+  const currencyA = /^[A-Z]{3}$/.test(a.currency || "") ? a.currency : "ZZZ";
+  const currencyB = /^[A-Z]{3}$/.test(b.currency || "") ? b.currency : "ZZZ";
+  const currency = currencyA.localeCompare(currencyB);
+  if (currency) return currency;
+  const left = priorityAmount(a),
+    right = priorityAmount(b);
+  if (left == null && right != null) return -1;
+  if (right == null && left != null) return 1;
+  return (
+    (right ?? 0) - (left ?? 0) ||
+    b.rules.filter((r) => r.status === "fail").length -
+      a.rules.filter((r) => r.status === "fail").length ||
+    a.id.localeCompare(b.id)
+  );
 }

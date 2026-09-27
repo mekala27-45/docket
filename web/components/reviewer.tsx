@@ -37,6 +37,7 @@ interface Props {
   ) => Promise<void>;
 }
 interface Calibration {
+  population?: string;
   field: string;
   backend: string;
   bins: { confidence: number; accuracy: number; count: number }[];
@@ -46,11 +47,20 @@ export function calibrationSentence(
   name: string,
   confidence: number,
   evaluation: Record<string, unknown>,
+  population = "generated",
+  backend = "rules",
 ): string {
   const entries = (evaluation.calibration || []) as Calibration[];
   const entry =
-    entries.find((e) => e.field === name && e.backend === "rules") ||
-    entries.find((e) => e.field === name);
+    entries.find(
+      (e) =>
+        e.field === name &&
+        e.backend === backend &&
+        e.population === population,
+    ) ||
+    entries.find(
+      (e) => e.field === name && e.backend === backend && !e.population,
+    );
   const bins = (entry?.bins || []).filter((b) => b.count > 0);
   const bin = bins.sort(
     (a, b) =>
@@ -384,7 +394,11 @@ export function Reviewer({ documents, evaluation, connected, onSave }: Props) {
                       >
                         {field.reviewed
                           ? "Reviewed"
-                          : pct(field.confidence ?? 0)}
+                          : field.value == null ||
+                              field.calibration_n === 0 ||
+                              field.confidence == null
+                            ? "Unknown"
+                            : pct(field.confidence)}
                         <span>
                           {field.reviewed ? "by a human" : "confidence"}
                         </span>
@@ -428,6 +442,8 @@ export function Reviewer({ documents, evaluation, connected, onSave }: Props) {
                           name,
                           field.confidence ?? 0,
                           evaluation,
+                          doc.source.includes("cord") ? "cord" : "generated",
+                          doc.extraction.backend,
                         )}
                     </p>
                     {trace === name && (
