@@ -7,6 +7,7 @@ import copy
 import hmac
 import io
 import json
+import math
 import os
 import uuid
 from collections.abc import AsyncIterator
@@ -28,7 +29,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from packages.api.store import Audit, Base, Correction, Document, ModelRun, make_engine, purge_expired
 from packages.redact import redact_image, redact_payload
-from packages.rules import validate_document
+from packages.rules import amount, validate_document
 
 MAX_UPLOAD = 10 * 1024 * 1024
 MAX_REQUEST = MAX_UPLOAD + 64 * 1024
@@ -219,6 +220,15 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
         if not set(request.fields).issubset(ALLOWED_FIELDS):
             raise HTTPException(422, "Unknown review field")
         safe, redaction = redact_payload(request.model_dump())
+        for name in {"subtotal", "tax", "total"}.intersection(safe["fields"]):
+            value = safe["fields"][name]
+            if value is None or (isinstance(value, str) and not value.strip()):
+                safe["fields"][name] = None
+                continue
+            parsed = amount(value)
+            if parsed is None or not math.isfinite(float(parsed)):
+                raise HTTPException(422, "Monetary fields must be finite amounts or blank")
+            safe["fields"][name] = float(parsed)
         with Session(engine) as session, session.begin():
             stored = session.scalar(select(Document).where(Document.id == document_id).with_for_update())
             if stored is None:

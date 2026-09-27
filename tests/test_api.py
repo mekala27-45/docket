@@ -318,3 +318,13 @@ def test_upload_request_has_hard_limit(api):
     client, _, _ = api
     response = client.post("/v1/documents", content=b"x" * (MAX_REQUEST + 1), headers={"Authorization": "Bearer test-token", "Content-Type": "multipart/form-data; boundary=test"})
     assert response.status_code == 413
+
+
+def test_review_normalizes_browser_monetary_strings_and_blank_values(api):
+    client, _, _ = api
+    response = client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"total": "123.45", "tax": ""}, "decision": "accept"})
+    assert response.status_code == 200
+    document = response.json()["document"]
+    assert document["total"] == 123.45 and document["tax"] is None
+    assert document["extraction"]["fields"]["total"]["value"] == 123.45
+    assert client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"total": "not an amount"}, "decision": "accept"}).status_code == 422
