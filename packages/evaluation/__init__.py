@@ -79,15 +79,36 @@ def summarize(records: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def edit_distance(left: list[str] | str, right: list[str] | str) -> int:
-    if len(left) < len(right):
+    """Exact unit-cost Levenshtein distance with a bit-vector DP column.
+
+    Python integers retain all pattern positions, so this also handles strings
+    longer than a machine word. The metric is unchanged; the inner character
+    loop runs in integer operations instead of Python cell-by-cell updates.
+    """
+    if len(left) > len(right):
         left, right = right, left
-    previous = list(range(len(right) + 1))
-    for i, a in enumerate(left, 1):
-        current = [i]
-        for j, b in enumerate(right, 1):
-            current.append(min(previous[j] + 1, current[-1] + 1, previous[j - 1] + (a != b)))
-        previous = current
-    return previous[-1]
+    size = len(left)
+    if not size:
+        return len(right)
+    equal_masks: dict[str, int] = {}
+    for index, token in enumerate(left):
+        equal_masks[token] = equal_masks.get(token, 0) | (1 << index)
+    mask, highest = (1 << size) - 1, 1 << (size - 1)
+    positive, negative, distance = mask, 0, size
+    for token in right:
+        equal = equal_masks.get(token, 0)
+        vertical = equal | negative
+        horizontal = (((equal & positive) + positive) ^ positive) | equal
+        plus = negative | ~(horizontal | positive)
+        minus = positive & horizontal
+        if plus & highest:
+            distance += 1
+        elif minus & highest:
+            distance -= 1
+        plus, minus = ((plus << 1) | 1) & mask, (minus << 1) & mask
+        positive = (minus | ~(vertical | plus)) & mask
+        negative = plus & vertical
+    return distance
 
 
 def ocr_error(gold: list[dict[str, Any]], real: list[dict[str, Any]]) -> dict[str, float]:
