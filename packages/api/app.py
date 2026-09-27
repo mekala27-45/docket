@@ -23,19 +23,26 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
+from starlette.formparsers import MultiPartParser
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from packages.api.store import Audit, Base, Correction, Document, ModelRun, make_engine, purge_expired
 from packages.redact import redact_image, redact_payload
 from packages.rules import validate_document
 
 MAX_UPLOAD = 10 * 1024 * 1024
+MAX_REQUEST = MAX_UPLOAD + 64 * 1024
+# The default multipart implementation spills raw file bytes to disk at 1 MiB.
+# Keep every accepted request in memory until OCR/redaction, with a hard receive cap.
+MultiPartParser.spool_max_size = MAX_REQUEST + 1
 MAX_PIXELS = 25_000_000
 ALLOWED_FIELDS = {"vendor", "number", "date", "due_date", "currency", "subtotal", "tax", "total", "po_number"}
+REFERENCE_FIELDS = {"vendor_master", "vendor_currencies", "po_reference", "as_of", "max_age_days"}
 ROOT = Path(__file__).resolve().parents[2]
 
 
 class ReviewRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
     fields: dict[str, str | float | int | None] = Field(default_factory=dict, max_length=20)
     line_items: list[dict[str, Any]] | None = Field(default=None, max_length=200)
     decision: Literal["accept", "reject"]
@@ -46,6 +53,32 @@ class ExtractRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     document_id: str = Field(max_length=128)
     backend: Literal["rules", "tokens"] = "rules"
+
+
+class UploadBodyLimit:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope.get("path") != "/v1/documents" or scope.get("method") != "POST":
+            await self.app(scope, receive, send)
+            return
+        headers = dict(scope.get("headers", []))
+        length = headers.get(b"content-length", b"0")
+        if length.isdigit() and int(length) > MAX_REQUEST:
+            await Response("Upload request exceeds 10 MiB plus multipart headers", status_code=413)(scope, receive, send)
+            return
+        received = 0
+
+        async def bounded_receive() -> Message:
+            nonlocal received
+            message = await receive()
+            received += len(message.get("body", b""))
+            if received > MAX_REQUEST:
+                raise HTTPException(413, "Upload request exceeds the allowed size")
+            return message
+
+        await self.app(scope, bounded_receive, send)
 
 
 def normalize_upload(raw: bytes, content_type: str | None) -> bytes:
@@ -101,11 +134,17 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
         Base.metadata.create_all(engine)
         if seed_file.exists():
             bundle = json.loads(seed_file.read_text(encoding="utf-8"))
+            reference_path = ROOT / "data/dataset.json"
+            references = {item["id"]: {key: item[key] for key in REFERENCE_FIELDS if key in item}
+                          for item in json.loads(reference_path.read_text(encoding="utf-8"))} if reference_path.exists() and bundle.get("documents") else {}
             with Session(engine) as session, session.begin():
                 for payload in bundle.get("documents", []):
                     if session.get(Document, payload["id"]) is None:
                         safe, _ = redact_payload(payload)
-                        session.add(Document(id=safe["id"], payload=safe, source=safe.get("source", "generated")))
+                        reference = references.get(safe["id"], {key: safe[key] for key in REFERENCE_FIELDS if key in safe})
+                        for key in REFERENCE_FIELDS:
+                            safe.pop(key, None)
+                        session.add(Document(id=safe["id"], payload=safe, reference=reference, source=safe.get("source", "generated")))
         purge_expired(engine)
         async def retention_loop() -> None:
             while True:
@@ -123,6 +162,7 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
 
     app = FastAPI(title="docket", version="0.1.0", lifespan=lifespan)
     app.state.engine = engine
+    app.add_middleware(UploadBodyLimit)
     retrain_lock = asyncio.Lock()
     origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080").split(",")
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
@@ -197,7 +237,7 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
             rows = safe["line_items"] if safe["line_items"] is not None else extraction.get("line_items", [])
             extraction["line_items"] = rows
             known = [row.payload for row in session.scalars(select(Document))]
-            payload["rules"] = validate_document(payload, fields, rows, known_documents=known)
+            payload["rules"] = validate_document({**payload, **stored.reference}, fields, rows, known_documents=known)
             payload["status"] = "accepted" if request.decision == "accept" else "rejected"
             payload["risk"] = 0
             payload["line_items"] = rows
@@ -244,10 +284,13 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
     @app.post("/v1/extract", dependencies=[Depends(authorize)])
     async def extract(request: ExtractRequest) -> dict[str, Any]:
         with Session(engine) as session:
-            original = copy.deepcopy(fetch(session, request.document_id).payload)
+            stored = fetch(session, request.document_id)
+            original = {**copy.deepcopy(stored.payload), **stored.reference}
         from packages.pipeline import process_document
 
         result = await run_in_threadpool(process_document, original, request.backend)
+        for key in REFERENCE_FIELDS:
+            result.pop(key, None)
         result, _ = redact_payload(result)
         with Session(engine) as session, session.begin():
             stored = fetch(session, request.document_id)

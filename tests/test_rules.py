@@ -7,7 +7,7 @@ from packages.rules import amount, perceptual_hash_distance, validate_document
 
 @pytest.fixture
 def clean():
-    doc = {"id": "a", "type": "invoice", "vendor": "Example Supplies", "po_number": "PO-123", "source": "generated"}
+    doc = {"id": "a", "type": "invoice", "vendor": "Example Supplies", "vendor_master": ["Example Supplies"], "po_number": "PO-123", "po_reference": {"number": "PO-123", "total": 11}, "source": "generated"}
     fields = {"vendor": "Example Supplies", "number": "INV-123", "date": "2026-01-01", "due_date": "2026-01-31", "currency": "USD", "subtotal": 10, "tax": 1, "total": 11, "po_number": "PO-123"}
     return doc, fields, [{"amount": 10}]
 
@@ -78,3 +78,12 @@ def test_injected_labels_are_not_detection_evidence(clean):
     doc["duplicate_of"] = "some-document"
     doc["defects"] = ["duplicate"]
     assert validate_document(doc, fields, rows)[-1]["status"] == "pass"
+
+
+def test_fields_cannot_verify_their_own_vendor_or_purchase_order(clean):
+    doc, fields, rows = clean
+    doc.pop("vendor_master")
+    doc.pop("po_reference")
+    results = validate_document(doc, fields, rows)
+    assert results[3]["status"] == "fail"
+    assert results[4]["status"] == "fail"

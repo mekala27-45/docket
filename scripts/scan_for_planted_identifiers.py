@@ -49,7 +49,7 @@ def scan_database(url: str) -> dict[str, Any]:
         with Session(engine) as session:
             for document in session.scalars(select(Document)):
                 checked += 1
-                if scan_text(json.dumps(document.payload)):
+                if scan_text(json.dumps({"payload": document.payload, "reference": document.reference})):
                     failures.append("document-payload")
                 if document.image:
                     images += 1

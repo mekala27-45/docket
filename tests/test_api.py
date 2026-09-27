@@ -271,3 +271,50 @@ def test_retrain_reports_invalid_corrections_without_saving_model(api, monkeypat
     assert response.status_code == 422
     with Session(app.state.engine) as session:
         assert session.scalar(select(ModelRun)) is None
+
+
+def test_review_checks_edited_vendor_against_independent_master(api):
+    client, app, _ = api
+    with Session(app.state.engine) as session, session.begin():
+        stored = session.get(Document, "test-1")
+        stored.reference = {"vendor_master": ["Example Supplies"], "po_reference": {"number": "PO-1"}}
+    response = client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"vendor": "Unlisted Vendor", "po_number": "WRONG-PO"}, "decision": "accept"})
+    assert response.status_code == 200
+    rules = {rule["id"]: rule for rule in response.json()["document"]["rules"]}
+    assert rules["vendor"]["status"] == "fail"
+    assert rules["purchase_order"]["status"] == "fail"
+    assert "vendor_master" not in client.get("/v1/documents/test-1").json()
+
+
+def test_upload_never_rolls_raw_multipart_file_to_disk(api, monkeypatch):
+    import tempfile
+
+    import starlette.formparsers
+
+    client, _, _ = api
+    pipeline = types.ModuleType("packages.pipeline")
+    pipeline.process_image = lambda pixels, filename: {"tokens": [{"text": "safe", "box": [0.1, 0.1, 0.1, 0.1]}]}
+    monkeypatch.setitem(sys.modules, "packages.pipeline", pipeline)
+    created = []
+    original = tempfile.SpooledTemporaryFile
+
+    def capture(*args, **kwargs):
+        file = original(*args, **kwargs)
+        created.append(file)
+        return file
+
+    monkeypatch.setattr(starlette.formparsers, "SpooledTemporaryFile", capture)
+    output = io.BytesIO()
+    Image.effect_noise((1000, 1000), 100).convert("RGB").save(output, "PNG")
+    assert len(output.getvalue()) > 1024 * 1024
+    response = client.post("/v1/documents", headers={"Authorization": "Bearer test-token"}, files={"file": ("large.png", output.getvalue(), "image/png")})
+    assert response.status_code == 201
+    assert created and all(not file._rolled for file in created)
+
+
+def test_upload_request_has_hard_limit(api):
+    from packages.api.app import MAX_REQUEST
+
+    client, _, _ = api
+    response = client.post("/v1/documents", content=b"x" * (MAX_REQUEST + 1), headers={"Authorization": "Bearer test-token", "Content-Type": "multipart/form-data; boundary=test"})
+    assert response.status_code == 413

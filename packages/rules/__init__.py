@@ -41,8 +41,8 @@ def validate_document(
 ) -> list[dict[str, str]]:
     """Evaluate six policy checks against supplied evidence and known documents.
 
-    A generated document's vendor and PO act as its reference master record.
-    Uploaded documents need explicit vendor/PO verification to pass those checks.
+    Vendor and PO checks require independent master records. Extracted or edited
+    document fields cannot serve as their own verification evidence.
     """
     values = {key: val.get("value") if isinstance(val, dict) else val for key, val in fields.items()}
     output: list[dict[str, str]] = []
@@ -86,14 +86,14 @@ def validate_document(
     add("currency", "pass" if valid_currency else "fail", "Currency must be a supported ISO currency code.")
 
     vendor = str(values.get("vendor") or "").strip().casefold()
-    master = document.get("vendor_master", [document.get("vendor")] if document.get("source") != "upload" else [])
+    master = document.get("vendor_master", [])
     known = {str(item).strip().casefold() for item in master if item}
     valid_vendor = bool(vendor and vendor in known)
     add("vendor", "pass" if valid_vendor else "fail", "Extracted vendor must match the supplied vendor master.")
 
     po_value = str(values.get("po_number") or "").strip()
     reference = document.get("po_reference", {})
-    po_reference = str(reference.get("number", document.get("po_number")) or "").strip()
+    po_reference = str(reference.get("number") or "").strip()
     if document.get("type") == "receipt" and values:
         add("purchase_order", "not_applicable", "Receipts do not require a purchase order.")
     else:

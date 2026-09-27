@@ -18,6 +18,7 @@ class Document(Base):
     __tablename__ = "documents"
     id: Mapped[str] = mapped_column(String(128), primary_key=True)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON)
+    reference: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     image: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     source: Mapped[str] = mapped_column(String(32), default="generated")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
