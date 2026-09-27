@@ -1,10 +1,12 @@
-# docket
+# docket 0.2.0
 
-Initial recorded document-intelligence workbench for accounts payable, published on GitHub Pages.
+Audit follow-up for the recorded document-intelligence workbench on GitHub Pages. The owner reaffirmed Pages-only hosting; the API remains an optional local service.
 
-Includes an inbox, document reviewer with field overlays and trace, browser-local practice corrections, paired OCR evaluation, calibration and routing charts, a degradation lab, rule inspection, model summaries, browser SQL, and a printable report.
+Uses all original CORD partitions and a wider generated degradation experiment. Calibration includes imperfect validation pages, separates receipt and generated populations, and reports independent parent counts for image variants. Missing reference values remain unmeasured. Currency parsing recognizes Indonesian currency prefixes without treating malformed or ambiguous values as truth.
 
-The source includes a seeded document generator, a bounded attributed CORD corpus, real Tesseract observations, rules and learned token extraction, and an optional token-gated API with durable corrections and audit tests.
+The lab shows all six degradation curves together with per-backend floor crossings. Rule scorecards expose precision, recall and confusion counts against injected defects, including currency mismatches. Routing results are broken down by source; unavailable priority amounts remain unavailable. Extractor model cards are rendered and checked from the same evidence manifest.
+
+The optional correction loop now records explicit provenance, masks unreviewed or ambiguous OCR spans during training, aligns reviewed line items, and exports accepted corrections through an authenticated client. Candidate reports include frozen CORD test results and hashes. Simulated corrections are not relabeled as human reviews, and candidates do not replace the published model automatically.
 
 Read [RESULTS.md](https://github.com/mekala27-45/docket/blob/main/RESULTS.md) for measured evidence and limitations. The published deployment is a recorded demo; it does not host the API. Browser practice changes do not retrain the published models.
 

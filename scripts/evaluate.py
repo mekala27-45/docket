@@ -135,29 +135,38 @@ def run() -> dict[str, Any]:
         routing_records[doc["split"]].append({"document_id": doc["id"], "source": doc["source"],
             "confidence": document_confidence(doc, prediction), "rules_pass": all(r["status"] in {"pass", "not_applicable"} for r in rules),
             "required_present": bool(required) and all(prediction["fields"].get(f, {}).get("value") is not None for f in required),
-            "correct": score_document(doc, prediction)["document_success"] == 1 and not doc.get("defects")})
+            "correct": (score_document(doc, prediction)["document_success"] == 1 and not doc.get("defects"))
+                       if all(doc.get(field) is not None for field in required) else None})
         for rule in rules:
             rules_records.append({**rule, "document_id": doc["id"], "source": doc["source"], "split": doc["split"],
                                   "expected_defect": rule["id"] in doc.get("defects", [])
                                   or (rule["id"] == "purchase_order" and "arithmetic" in doc.get("defects", []))})
-    operating = choose_threshold(routing_records["validation"])
+    selection_records = [r for r in routing_records["validation"] if r["correct"] is not None]
+    operating = choose_threshold(selection_records)
+    operating["unlabeled_validation_documents"] = len(routing_records["validation"]) - len(selection_records)
     approved = [r for r in routing_records["test"] if r["rules_pass"] and r["required_present"]
                 and r["confidence"] >= operating["threshold"]]
     n_test = len(test)
+    labeled_approved = [r for r in approved if r["correct"] is not None]
     operating.update({"reported_on": "test", "backend": "rules", "ocr_engine": "tesseract", "n": n_test,
                        "auto_approved": len(approved),
                        "review_rate": proportion_interval(n_test - len(approved), n_test),
-                       "auto_approval_error": proportion_interval(sum(not r["correct"] for r in approved), len(approved),
-                                                                    "No auto-approved test documents"),
+                       "auto_approval_error": proportion_interval(sum(not r["correct"] for r in labeled_approved), len(labeled_approved),
+                                                                    "No auto-approved test documents with complete reference labels"),
+                       "unlabeled_auto_approved": len(approved) - len(labeled_approved),
+                       "unlabeled_test_documents": sum(r["correct"] is None for r in routing_records["test"]),
                        "correctness": "All required normalized fields correct and no planted business defect"})
     operating["by_source"] = []
     for source in ("generated", "cord"):
         population_records = [r for r in routing_records["test"] if r["source"] == source]
         population_approved = [r for r in approved if r["source"] == source]
+        labeled_source_approved = [r for r in population_approved if r["correct"] is not None]
         operating["by_source"].append({"source": source, "n": len(population_records),
             "auto_approved": len(population_approved),
             "review_rate": proportion_interval(len(population_records) - len(population_approved), len(population_records)),
-            "auto_approval_error": proportion_interval(sum(not r["correct"] for r in population_approved), len(population_approved),
+            "unlabeled_documents": sum(r["correct"] is None for r in population_records),
+            "unlabeled_auto_approved": len(population_approved) - len(labeled_source_approved),
+            "auto_approval_error": proportion_interval(sum(not r["correct"] for r in labeled_source_approved), len(labeled_source_approved),
                                                        "No auto-approved documents in this population")})
     rule_scorecard = []
     for rule_id in sorted({r["id"] for r in rules_records}):
@@ -175,7 +184,8 @@ def run() -> dict[str, Any]:
     comparisons = []
     for source in ("generated", "cord"):
         for engine in ("gold", "tesseract"):
-            selected = [r for r in scored if r["source"] == source and r["ocr_engine"] == engine and r["split"] == "test"]
+            selected = [r for r in scored if r["source"] == source and r["ocr_engine"] == engine
+                        and r["split"] == "test" and r["field_f1"] is not None]
             left = [r["field_f1"] for r in selected if r["backend"] == "tokens"]
             right = [r["field_f1"] for r in selected if r["backend"] == "rules"]
             comparisons.append({"source": source, "ocr_engine": engine, **paired_comparison(left, right)})
@@ -256,6 +266,7 @@ def run() -> dict[str, Any]:
         "No live cloud API is deployed. The GitHub Pages demo records this run and stores review practice in the browser.",
         "Retrain demonstration uses simulated corrections from validation truth; no human corrections are claimed.",
         "Generated calibration includes controlled image variants from 24 validation parents; these are correlated observations, not new independent documents.",
+        "Unlabeled reference fields are not errors. Document-success rates exclude missing required truth; policy selection excludes unknown outcomes, while review-rate denominators retain the full test inbox.",
     ]
     write_json(ROOT / "results/manifest.json", manifest)
     pd.DataFrame([{k: v for k, v in r.items() if k != "fields"} for r in scored]).to_parquet(ROOT / "results/extraction.parquet", index=False)
