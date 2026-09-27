@@ -185,6 +185,7 @@ test("connected reviews retain session across navigation and use API response", 
       expect(route.request().headers().authorization).toBe(
         "Bearer test-session-token",
       );
+      expect(route.request().postDataJSON().review_source).toBe("human");
       posted = true;
       await route.fulfill({
         json: {
@@ -281,12 +282,27 @@ test("capture responsive inbox and reviewer", async ({ page }, testInfo) => {
   }
   await page.getByRole("button", { name: "Switch to dark theme" }).click();
   if (testInfo.project.name === "mobile") {
-    await page.getByRole("button", { name: "Close navigation" }).click({position:{x:350,y:100}});
+    await page
+      .getByRole("button", { name: "Close navigation" })
+      .click({ position: { x: 350, y: 100 } });
   }
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.locator(".document-paper")).toHaveCSS("background-color", "rgb(255, 255, 255)");
-  await page.screenshot({path:`test-results/${testInfo.project.name}-reviewer-dark.png`,fullPage:true,animations:"disabled"});
+  await expect(page.locator(".document-paper")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await page.screenshot({
+    path: `test-results/${testInfo.project.name}-reviewer-dark.png`,
+    fullPage: true,
+    animations: "disabled",
+  });
   await page.goto("evaluation/");
-  await expect(page.getByRole("heading", { name: "Know what you can trust." })).toBeVisible();
-  await page.screenshot({path:`test-results/${testInfo.project.name}-evaluation-dark.png`,fullPage:true,animations:"disabled"});
+  await expect(
+    page.getByRole("heading", { name: "Know what you can trust." }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: `test-results/${testInfo.project.name}-evaluation-dark.png`,
+    fullPage: true,
+    animations: "disabled",
+  });
 });
