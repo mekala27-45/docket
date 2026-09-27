@@ -19,6 +19,7 @@ from packages.core import (
 
 
 @pytest.mark.parametrize(('raw', 'expected'), [('Rp 15.000', '15000.00'), ('$1,234.56', '1234.56'),
+                                             ('Rp.118.000', '118000.00'), (' rp. 1.234.000 ', '1234000.00'),
                                              ('12,50', '12.50'), ('-25.40', '-25.40')])
 def test_amount_locale_and_sign(raw: str, expected: str) -> None:
     assert amount(raw) == Decimal(expected)

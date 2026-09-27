@@ -207,7 +207,9 @@ def retrain_from_corrections(corrections: list[dict[str, Any]]) -> dict[str, Any
                              "after": score_document(document, candidate.extract(tokens, document["type"]))["field_f1"]})
     real = [row for row in outcomes if row["ocr_engine"] == "tesseract"]
     by_source = [{"source": source, "ocr_engine": engine, "split": "test", "n_test": len(rows),
-                  "before": interval([row["before"] for row in rows]), "after": interval([row["after"] for row in rows])}
+                  "before": interval([row["before"] for row in rows if row["before"] is not None], reason="No evaluable reference fields"),
+                  "after": interval([row["after"] for row in rows if row["after"] is not None], reason="No evaluable reference fields"),
+                  "excluded_without_reference": sum(row["before"] is None for row in rows)}
                  for source in sorted({d["source"] for d in test}) for engine in ("gold", "tesseract")
                  if (rows := [row for row in outcomes if row["source"] == source and row["ocr_engine"] == engine])]
     provenance_counts = Counter(str(source.get("provenance", {}).get("kind", "unspecified")) for source, _ in usable)
@@ -217,7 +219,9 @@ def retrain_from_corrections(corrections: list[dict[str, Any]]) -> dict[str, Any
     candidate.save(path)
     if hashlib.sha256(MODEL_PATH.read_bytes()).hexdigest() != canonical_hash:
         raise RuntimeError("Canonical model changed during the retrain run")
-    report = {"before": interval([row["before"] for row in real]), "after": interval([row["after"] for row in real]), "corrections_used": len(corrected),
+    report = {"before": interval([row["before"] for row in real if row["before"] is not None], reason="No evaluable reference fields"),
+              "after": interval([row["after"] for row in real if row["after"] is not None], reason="No evaluable reference fields"),
+              "excluded_without_reference": sum(row["before"] is None for row in real), "corrections_used": len(corrected),
               "corrections_received": len(corrections), "corrections_without_trainable_spans": len(aligned) - len(corrected),
               "human_corrections_used": provenance_counts.get("client_declared_human", 0),
               "simulated_corrections_used": provenance_counts.get("simulated_ground_truth", 0),

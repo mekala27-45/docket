@@ -4,7 +4,7 @@ from typing import Any
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-from packages.core import FIELDS, SEED, matches, required_fields
+from packages.core import FIELDS, SEED, matches, normalize, required_fields
 
 
 def interval(values: list[float | int | bool], *, reason: str = "No observations", bootstrap: int = 500) -> dict[str, Any]:
@@ -31,8 +31,8 @@ def proportion_interval(successes: int, n: int, reason: str = "No observations")
 
 def fields_to_score(document: dict[str, Any]) -> list[str]:
     if document["source"] == "cord":
-        return [f for f in ("subtotal", "tax", "total") if document.get(f) is not None]
-    return [f for f in FIELDS if document.get(f) is not None]
+        return [f for f in ("subtotal", "tax", "total") if normalize(document.get(f), f)]
+    return [f for f in FIELDS if normalize(document.get(f), f)]
 
 
 def score_rows(predicted: list[dict[str, Any]], gold: list[dict[str, Any]]) -> float:
@@ -59,17 +59,23 @@ def score_document(document: dict[str, Any], extraction: dict[str, Any]) -> dict
     tp = sum(results.values())
     denominator = predicted + len(fields)
     required = required_fields(document["type"])
-    success = bool(required) and all(matches(values.get(f, {}).get("value"), document.get(f), f) for f in required)
-    return {"document_id": document["id"], "field_f1": 2 * tp / denominator if denominator else 0,
-            "precision": tp / predicted if predicted else 0, "recall": tp / len(fields) if fields else 0,
-            "exact_match": sum(exact) / len(exact) if exact else 0, "document_success": int(success),
-            "line_item_f1": score_rows(extraction.get("line_items", []), document.get("line_items", [])),
+    document_evaluable = bool(required) and all(normalize(document.get(f), f) for f in required)
+    success = int(all(matches(values.get(f, {}).get("value"), document[f], f) for f in required)) if document_evaluable else None
+    row_truth = document.get("line_items")
+    rows_evaluable = row_truth is not None and (bool(row_truth) or document["source"] != "cord")
+    return {"document_id": document["id"], "field_f1": 2 * tp / denominator if fields else None,
+            "precision": (tp / predicted if predicted else 0) if fields else None,
+            "recall": tp / len(fields) if fields else None,
+            "exact_match": sum(exact) / len(exact) if exact else None, "document_success": success,
+            "reference_fields": len(fields), "document_evaluable": document_evaluable,
+            "line_item_f1": score_rows(extraction.get("line_items", []), row_truth) if rows_evaluable else None,
             "fields": results}
 
 
 def summarize(records: list[dict[str, Any]]) -> dict[str, Any]:
-    return {key: interval([r[key] for r in records]) for key in
-            ("field_f1", "precision", "recall", "exact_match", "document_success", "line_item_f1")}
+    return {key: {**interval([r[key] for r in records if r.get(key) is not None], reason="No evaluable reference labels"),
+                  "population_n": len(records), "excluded_without_reference": sum(r.get(key) is None for r in records)}
+            for key in ("field_f1", "precision", "recall", "exact_match", "document_success", "line_item_f1")}
 
 
 def edit_distance(left: list[str] | str, right: list[str] | str) -> int:

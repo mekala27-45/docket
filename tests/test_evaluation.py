@@ -7,7 +7,9 @@ from packages.evaluation import (
     ocr_error,
     paired_comparison,
     proportion_interval,
+    score_document,
     score_rows,
+    summarize,
 )
 
 
@@ -64,3 +66,37 @@ def test_published_sweep_examples_reference_real_source_documents():
         assert observation["document_id"] in ids
         assert (ROOT / "web/public" / observation["image"].lstrip("/")).is_file()
         assert Path(observation["image"]).stem.startswith(observation["document_id"] + "-")
+
+
+def test_unknown_receipt_truth_is_not_an_extraction_failure_or_success():
+    document = {"id": "unlabeled", "type": "receipt", "source": "cord", "total": None,
+                "subtotal": None, "tax": None, "line_items": []}
+    result = score_document(document, {"fields": {"total": {"value": 118000}}, "line_items": []})
+    assert result["fields"] == {}
+    assert result["reference_fields"] == 0 and result["document_evaluable"] is False
+    for metric in ("field_f1", "precision", "recall", "exact_match", "document_success", "line_item_f1"):
+        assert result[metric] is None
+
+
+def test_document_correctness_requires_all_required_reference_fields():
+    document = {"id": "partial", "type": "receipt", "source": "cord", "total": None, "tax": 10, "line_items": []}
+    result = score_document(document, {"fields": {"tax": {"value": 10}}})
+    assert result["field_f1"] == 1
+    assert result["document_success"] is None
+    document["total"] = 100
+    assert score_document(document, {"fields": {"tax": {"value": 10}}})["document_success"] == 0
+
+
+def test_summary_reports_per_metric_evaluable_denominators():
+    complete = score_document({"id": "labeled", "source": "cord", "type": "receipt", "total": 10},
+                              {"fields": {"total": {"value": 10}}})
+    unknown = score_document({"id": "unknown", "source": "cord", "type": "receipt", "total": None},
+                             {"fields": {"total": {"value": 999}}})
+    summary = summarize([complete, unknown])
+    assert summary["field_f1"]["value"] == 1
+    assert summary["field_f1"]["n"] == 1
+    assert summary["field_f1"]["population_n"] == 2
+    assert summary["field_f1"]["excluded_without_reference"] == 1
+    assert summary["document_success"]["n"] == 1
+    assert summary["line_item_f1"]["value"] is None
+    assert summary["line_item_f1"]["n"] == 0

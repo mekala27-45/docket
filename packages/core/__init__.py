@@ -24,7 +24,11 @@ def amount(value: Any) -> Decimal | None:
     """Parse US decimals and CORD's Indonesian dot thousands consistently."""
     if value is None or isinstance(value, bool):
         return None
-    text = re.sub(r"[^0-9.,+-]", "", str(value))
+    # The dot in the Indonesian abbreviation "Rp." is not a decimal point.
+    # Remove that prefix before retaining numeric punctuation so Rp.118.000
+    # does not become the malformed number .118.000.
+    source = re.sub(r"(?i)^\s*rp\s*\.?\s*", "", str(value))
+    text = re.sub(r"[^0-9.,+-]", "", source)
     if not text or not re.search(r"\d", text):
         return None
     if re.fullmatch(r"[+-]?\d{1,3}(\.\d{3})+", text):
