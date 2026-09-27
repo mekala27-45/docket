@@ -37,7 +37,8 @@ def test_image_pipeline_calls_ocr_and_returns_ephemeral_pixels(pipeline_dependen
     assert result["status"] == "needs_review"
     assert result["tokens"][1]["text"] == "108.00"
     assert {"vendor", "number", "currency", "total", "line_items"}.issubset(result)
-    assert result["vendor"] == "Unresolved vendor"
+    assert isinstance(result["vendor"], str) and result["vendor"]
+    assert next(rule for rule in result["rules"] if rule["id"] == "vendor")["status"] == "fail"
 
 
 def test_image_pipeline_refuses_unavailable_ocr(pipeline_dependencies, monkeypatch):
