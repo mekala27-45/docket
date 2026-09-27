@@ -106,7 +106,7 @@ def validate_document(
         add("purchase_order", "pass" if valid_po else "fail", "Purchase order must match the supplied PO record.")
 
     number = str(values.get("number") or "").strip().casefold()
-    duplicate = bool(document.get("duplicate_of"))
+    duplicate = False
     for other in known_documents or []:
         if other.get("id") == document.get("id"):
             continue

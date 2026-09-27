@@ -18,9 +18,10 @@ from PIL import Image, ImageDraw
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from packages.api.store import Audit, Correction, Document, make_engine
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from packages.api.store import Audit, Correction, Document, make_engine
 
 
 def verify_database(url: str, document_id: str, audit_id: int) -> None:

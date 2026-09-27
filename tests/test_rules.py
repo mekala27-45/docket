@@ -22,9 +22,8 @@ def test_rule_clean_pass(clean, rule):
 def test_rule_deliberate_defect(clean, rule, field, value):
     doc, fields, rows = deepcopy(clean)
     fields[field] = value
-    if rule == "duplicate":
-        doc["duplicate_of"] = "existing"
-    result = next(item for item in validate_document(doc, fields, rows) if item["id"] == rule)
+    known = [{"id": "independent", "vendor": fields["vendor"], "number": fields["number"], "total": fields["total"]}] if rule == "duplicate" else []
+    result = next(item for item in validate_document(doc, fields, rows, known_documents=known) if item["id"] == rule)
     assert result["status"] == "fail"
 
 
@@ -72,3 +71,10 @@ def test_hash_distance_symmetric():
     assert perceptual_hash_distance("0f", "fc") == perceptual_hash_distance("fc", "0f")
     with pytest.raises(ValueError):
         perceptual_hash_distance("", "")
+
+
+def test_injected_labels_are_not_detection_evidence(clean):
+    doc, fields, rows = clean
+    doc["duplicate_of"] = "some-document"
+    doc["defects"] = ["duplicate"]
+    assert validate_document(doc, fields, rows)[-1]["status"] == "pass"

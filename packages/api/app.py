@@ -123,6 +123,7 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
 
     app = FastAPI(title="docket", version="0.1.0", lifespan=lifespan)
     app.state.engine = engine
+    retrain_lock = asyncio.Lock()
     origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080").split(",")
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
 
@@ -222,6 +223,12 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
         document_id = "upload-" + uuid.uuid4().hex
         now = datetime.now(UTC)
         item.update(id=document_id, source="upload", image=f"/v1/documents/{document_id}/image", created_at=now.isoformat(), retention_hours=24, redaction={**report, **text_report})
+        # Uploaded suppliers and purchase orders have no verified master record.
+        # Human review is required until a caller supplies that missing evidence.
+        extraction = item.get("extraction", item)
+        item["rules"] = validate_document(item, extraction.get("fields", {}), extraction.get("line_items", []))
+        item["status"] = "needs_review"
+        item["risk"] = max(float(item.get("risk", 1)), 0.8)
         with Session(engine) as session, session.begin():
             session.add(Document(id=document_id, payload=item, image=redacted, source="upload", expires_at=now + timedelta(hours=24)))
             session.add(Audit(document_id=document_id, action="upload", detail={"redaction": item["redaction"], "retention_hours": 24}))
@@ -252,7 +259,8 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
             raise HTTPException(409, "Accept at least one correction before retraining")
         from packages.pipeline import retrain_from_corrections
 
-        report = await run_in_threadpool(retrain_from_corrections, corrections)
+        async with retrain_lock:
+            report = await run_in_threadpool(retrain_from_corrections, corrections)
         report, _ = redact_payload(report)
         with Session(engine) as session, session.begin():
             record = ModelRun(report=report)
