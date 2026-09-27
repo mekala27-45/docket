@@ -59,7 +59,8 @@ def scan_database(url: str) -> dict[str, Any]:
                         failures.append("document-image")
             for correction in session.scalars(select(Correction)):
                 checked += 1
-                if scan_text(json.dumps({"fields": correction.fields, "line_items": correction.line_items})):
+                if scan_text(json.dumps({"fields": correction.fields, "line_items": correction.line_items,
+                                         "snapshot": correction.snapshot, "provenance": correction.provenance})):
                     failures.append("correction")
             for event in session.scalars(select(Audit)):
                 checked += 1

@@ -328,3 +328,61 @@ def test_review_normalizes_browser_monetary_strings_and_blank_values(api):
     assert document["total"] == 123.45 and document["tax"] is None
     assert document["extraction"]["fields"]["total"]["value"] == 123.45
     assert client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"total": "not an amount"}, "decision": "accept"}).status_code == 422
+
+
+def test_correction_export_preserves_declared_provenance_and_immutable_review_snapshot(api):
+    client, app, _ = api
+    with Session(app.state.engine) as session, session.begin():
+        document = session.get(Document, "test-1")
+        document.payload = {**document.payload, "tokens": [{"text": "42", "box": [.1, .1, .1, .1]}],
+                            "extraction": {"fields": {"total": {"value": 10}, "tax": {"value": 999}}, "line_items": []}}
+    reviewed = client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"total": "42"}, "decision": "accept", "review_source": "human"})
+    assert reviewed.status_code == 200
+    with Session(app.state.engine) as session, session.begin():
+        document = session.get(Document, "test-1")
+        document.payload = {**document.payload, "tokens": [{"text": "changed-by-new-extraction"}]}
+    assert client.get("/v1/corrections/export").status_code == 401
+    exported = client.get("/v1/corrections/export", headers={"Authorization": "Bearer test-token"}).json()
+    assert exported["count"] == 1 and exported["provenance_counts"] == {"client_declared_human": 1}
+    record = exported["records"][0]
+    assert record["fields"] == {"total": 42}
+    assert record["document"]["tokens"][0]["text"] == "42"
+    assert record["line_items"] is None
+    assert record["provenance"]["audit_id"] == reviewed.json()["audit_id"]
+    assert record["provenance"]["identity_verified"] is False
+
+
+def test_unspecified_review_is_never_reclassified_as_human(api):
+    client, _, _ = api
+    client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"total": 42}, "decision": "accept"}).raise_for_status()
+    exported = client.get("/v1/corrections/export", headers={"Authorization": "Bearer test-token"}).json()
+    assert exported["provenance_counts"] == {"unspecified": 1}
+    response = client.post("/v1/retrain", headers={"Authorization": "Bearer test-token"}, json={"provenance_kinds": ["client_declared_human"]})
+    assert response.status_code == 409
+
+
+def test_retrain_rejects_changed_export_snapshot(api):
+    client, _, _ = api
+    client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"total": 42}, "decision": "accept"}).raise_for_status()
+    exported = client.get("/v1/corrections/export", headers={"Authorization": "Bearer test-token"}).json()
+    client.post("/v1/review/test-1", headers={"Authorization": "Bearer test-token"}, json={"fields": {"total": 43}, "decision": "accept"}).raise_for_status()
+    response = client.post("/v1/retrain", headers={"Authorization": "Bearer test-token"}, json={"expected_records_sha256": exported["records_sha256"]})
+    assert response.status_code == 409
+    assert "changed since export" in response.json()["detail"]
+
+
+def test_legacy_correction_upgrade_does_not_invent_provenance(tmp_path):
+    from sqlalchemy import text
+
+    from packages.api.store import accepted_corrections, initialize_schema
+
+    engine = make_engine(f"sqlite:///{tmp_path / 'legacy.sqlite'}")
+    with engine.begin() as connection:
+        connection.execute(text("CREATE TABLE corrections (id INTEGER PRIMARY KEY, document_id VARCHAR, fields JSON, line_items JSON, decision VARCHAR, created_at DATETIME)"))
+        connection.execute(text("INSERT INTO corrections VALUES (1, 'old', '{}', '[]', 'accept', '2026-09-26 12:00:00')"))
+    initialize_schema(engine)
+    with Session(engine) as session:
+        exported = accepted_corrections(session)
+        assert exported["count"] == 0
+        assert exported["excluded_legacy_without_provenance"] == 1
+    engine.dispose()

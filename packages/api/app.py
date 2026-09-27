@@ -27,7 +27,17 @@ from starlette.concurrency import run_in_threadpool
 from starlette.formparsers import MultiPartParser
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from packages.api.store import Audit, Base, Correction, Document, ModelRun, make_engine, purge_expired
+from packages.api.store import (
+    Audit,
+    Correction,
+    Document,
+    ModelRun,
+    accepted_corrections,
+    correction_records_digest,
+    initialize_schema,
+    make_engine,
+    purge_expired,
+)
 from packages.redact import redact_image, redact_payload
 from packages.rules import amount, validate_document
 
@@ -48,12 +58,19 @@ class ReviewRequest(BaseModel):
     line_items: list[dict[str, Any]] | None = Field(default=None, max_length=200)
     decision: Literal["accept", "reject"]
     reason: str = Field(default="", max_length=1000)
+    review_source: Literal["human", "simulation", "integration_test", "unspecified"] = "unspecified"
 
 
 class ExtractRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     document_id: str = Field(max_length=128)
     backend: Literal["rules", "tokens"] = "rules"
+
+
+class RetrainRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provenance_kinds: list[Literal["client_declared_human", "simulated_ground_truth", "integration_test", "unspecified"]] | None = None
+    expected_records_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
 
 class UploadBodyLimit:
@@ -132,7 +149,7 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
-        Base.metadata.create_all(engine)
+        initialize_schema(engine)
         if seed_file.exists():
             bundle = json.loads(seed_file.read_text(encoding="utf-8"))
             reference_path = ROOT / "data/dataset.json"
@@ -252,10 +269,18 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
             payload["risk"] = 0
             payload["line_items"] = rows
             payload["reviewed_at"] = datetime.now(UTC).isoformat()
-            correction = Correction(document_id=document_id, fields={key: value.get("value") for key, value in fields.items()}, line_items=rows, decision=request.decision)
-            event = Audit(document_id=document_id, action="review", detail={"decision": request.decision, "changed_fields": list(safe["fields"]), "reason": safe["reason"], "redaction": redaction})
+            kind = {"human": "client_declared_human", "simulation": "simulated_ground_truth",
+                    "integration_test": "integration_test", "unspecified": "unspecified"}[request.review_source]
+            snapshot: dict[str, Any] = {key: copy.deepcopy(payload[key]) for key in ("id", "type", "source", "split", "parent_id", "original_id", "canonical_id", "source_document_id") if key in payload}
+            snapshot["tokens"] = copy.deepcopy(payload.get("ocr_tokens", payload.get("tokens", [])))
+            provenance = {"kind": kind, "origin": "authenticated_api_review", "reviewed_fields": sorted(safe["fields"]),
+                          "line_items_reviewed": safe["line_items"] is not None, "identity_verified": False}
+            correction = Correction(document_id=document_id, fields=safe["fields"], line_items=safe["line_items"] or [],
+                                    snapshot=snapshot, provenance=provenance, decision=request.decision)
+            event = Audit(document_id=document_id, action="review", detail={"decision": request.decision, "reviewed_fields": list(safe["fields"]), "reason": safe["reason"], "redaction": redaction, "provenance": provenance})
             session.add_all([correction, event])
             session.flush()
+            correction.provenance = {**provenance, "audit_id": event.id}
             payload["audit_id"] = event.id
             stored.payload = payload
             audit_id = event.id
@@ -308,13 +333,20 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
             session.add(Audit(document_id=request.document_id, action="extract", detail={"backend": request.backend}))
         return result
 
-    @app.post("/v1/retrain", dependencies=[Depends(authorize)])
-    async def retrain() -> dict[str, Any]:
+    @app.get("/v1/corrections/export", dependencies=[Depends(authorize)])
+    def export_corrections() -> dict[str, Any]:
         with Session(engine) as session:
-            latest: dict[str, Correction] = {}
-            for correction in session.scalars(select(Correction).order_by(Correction.id)):
-                latest[correction.document_id] = correction
-            corrections = [{"document": copy.deepcopy(fetch(session, item.document_id).payload), "fields": item.fields, "line_items": item.line_items} for item in latest.values() if item.decision == "accept"]
+            return accepted_corrections(session)
+
+    @app.post("/v1/retrain", dependencies=[Depends(authorize)])
+    async def retrain(request: RetrainRequest | None = None) -> dict[str, Any]:
+        with Session(engine) as session:
+            corrections = accepted_corrections(session)["records"]
+        if request and request.provenance_kinds is not None:
+            corrections = [record for record in corrections if record["provenance"]["kind"] in request.provenance_kinds]
+        snapshot_hash = correction_records_digest(corrections)
+        if request and request.expected_records_sha256 and request.expected_records_sha256 != snapshot_hash:
+            raise HTTPException(409, "Accepted corrections changed since export; export again before retraining")
         if not corrections:
             raise HTTPException(409, "Accept at least one correction before retraining")
         from packages.pipeline import retrain_from_corrections
@@ -325,10 +357,13 @@ def create_app(database_url: str | None = None, write_token: str | None = None, 
             except ValueError as exc:
                 raise HTTPException(422, "Corrections must contain eligible non-test documents with trainable OCR spans") from exc
         report, _ = redact_payload(report)
+        report["correction_records_sha256"] = snapshot_hash
         with Session(engine) as session, session.begin():
             record = ModelRun(report=report)
             session.add(record)
-            session.add(Audit(action="retrain", detail={"corrections_used": report.get("corrections_used"), "split": report.get("split")}))
+            session.add(Audit(action="retrain", detail={"corrections_used": report.get("corrections_used"),
+                              "human_corrections_used": report.get("human_corrections_used"),
+                              "correction_provenance": report.get("correction_provenance"), "split": report.get("split")}))
             session.flush()
             run_id = record.id
         return {"run_id": run_id, **report, "committed": True}

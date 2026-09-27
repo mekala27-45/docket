@@ -49,13 +49,19 @@ class TokenExtractor:
         features, labels = [], []
         for document in documents:
             tokens = ordered(document["tokens"])
-            features.extend(token_features(tokens, document["type"]))
+            contextual_features = token_features(tokens, document["type"])
             previous_label = "O"
-            for token in tokens:
+            for token, feature in zip(tokens, contextual_features, strict=True):
+                if not token.get("training_mask", True):
+                    previous_label = "O"
+                    continue
                 label = token.get("label", "O")
                 bio = "O" if label == "O" else ("I-" if label == previous_label else "B-") + label
+                features.append(feature)
                 labels.append(token.get("bio", bio))
                 previous_label = label
+        if not features or len(set(labels)) < 2:
+            raise ValueError("Training requires observed tokens from at least two label classes")
         matrix = self.vectorizer.fit_transform(features)
         self.classifier.fit(matrix, labels)
         self.train_ids = [d["id"] for d in documents]

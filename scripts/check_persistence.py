@@ -32,6 +32,9 @@ def verify_database(url: str, document_id: str, audit_id: int) -> None:
             assert stored is not None and stored.payload["status"] == "accepted"
             correction = session.scalar(select(Correction).where(Correction.document_id == document_id))
             assert correction is not None and correction.fields["total"] == 123.45
+            assert correction.provenance["kind"] == "integration_test"
+            assert correction.provenance["audit_id"] == audit_id
+            assert correction.snapshot["tokens"]
             audit = session.get(Audit, audit_id)
             assert audit is not None and audit.action == "review" and audit.document_id == document_id
             assert stored.image and stored.source == "upload"
@@ -81,9 +84,12 @@ def run() -> None:
                     assert payload["vendor"] is not None and payload["number"] is not None
                     assert payload["status"] == "needs_review"
                     document_id = payload["id"]
-                    reviewed = client.post(f"/v1/review/{document_id}", headers={"Authorization": f"Bearer {token}"}, json={"fields": {"total": 123.45}, "decision": "accept", "reason": "Generated integration fixture"})
+                    reviewed = client.post(f"/v1/review/{document_id}", headers={"Authorization": f"Bearer {token}"}, json={"fields": {"total": 123.45}, "decision": "accept", "reason": "Generated integration fixture", "review_source": "integration_test"})
                     reviewed.raise_for_status()
                     audit_id = reviewed.json()["audit_id"]
+                    exported = client.get("/v1/corrections/export", headers={"Authorization": f"Bearer {token}"})
+                    exported.raise_for_status()
+                    assert exported.json()["provenance_counts"] == {"integration_test": 1}
                     subprocess.run([sys.executable, str(Path(__file__).resolve()), "--verify", database_url, document_id, str(audit_id)], cwd=ROOT, check=True, timeout=30)
             finally:
                 server.terminate()
