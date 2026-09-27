@@ -1,11 +1,13 @@
 """Run real Tesseract once per committed image, in native Python or the OCR container."""
 import concurrent.futures
+import hashlib
 import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from PIL import Image
+
 from packages.ocr import recognize
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,10 +15,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def one(document):
     dest = ROOT / "results/ocr" / f"{document['id']}.json"
+    source = ROOT / document["image_path"]
+    image_sha256 = hashlib.sha256(source.read_bytes()).hexdigest()
+    signature = "exif-rgb-upscale900-psm6-eng-v1"
     if dest.exists():
-        return document["id"]
-    record = recognize(Image.open(ROOT / document["image_path"]))
+        existing = json.loads(dest.read_text(encoding="utf-8"))
+        if existing.get("image_sha256") == image_sha256 and existing.get("preprocessing_signature") == signature:
+            return document["id"]
+    record = recognize(Image.open(source))
     record["document_id"] = document["id"]
+    record["image_sha256"] = image_sha256
+    record["preprocessing_signature"] = signature
     dest.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
     return document["id"]
 

@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from PIL import Image
 import pyarrow.parquet as pq
+from PIL import Image
 
 from packages.core import ROOT, SEED, amount, write_json
-from packages.gen import generate, degrade
+from packages.gen import degrade, generate
 
 CORD_MAP = {"menu.nm": "description", "menu.cnt": "quantity", "menu.unitprice": "unit_price",
             "menu.price": "amount", "menu.itemsubtotal": "amount", "sub_total.subtotal_price": "subtotal",
