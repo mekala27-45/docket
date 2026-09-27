@@ -22,6 +22,7 @@ CORD_MAP = {"menu.nm": "description", "menu.cnt": "quantity", "menu.unitprice": 
             "menu.price": "amount", "menu.itemsubtotal": "amount", "sub_total.subtotal_price": "subtotal",
             "sub_total.tax_price": "tax", "total.total_price": "total"}
 CORD_REVISION = "7f0115a4b758a71d6473b8d085751692da2fef98"
+CORD_NORMALIZATION_VERSION = 2
 CORD_SHARDS = {
     "train": ["train-00000-of-00004-b4aaeceff1d90ecb.parquet", "train-00001-of-00004-7dbbe248962764c5.parquet",
               "train-00002-of-00004-688fe1305a55e5cc.parquet", "train-00003-of-00004-2d0cd200555ed7fd.parquet"],
@@ -45,7 +46,17 @@ def fetch_json(url: str) -> Any:
         return json.load(response)
 
 
-def cord_document(row: dict[str, Any], index: int, split: str, image_bytes: bytes) -> dict[str, Any]:
+def cord_amount(value: Any) -> float | None:
+    """Repeated identical labels resolve to one value; conflicting labels remain unknown."""
+    values = value if isinstance(value, list) else [value]
+    parsed = [amount(item) for item in values]
+    if not parsed or any(item is None for item in parsed) or len(set(parsed)) != 1:
+        return None
+    result = parsed[0]
+    return float(result) if result is not None else None
+
+
+def cord_document(row: dict[str, Any], index: int, split: str, image_bytes: bytes | None) -> dict[str, Any]:
     gt = json.loads(row["ground_truth"])
     width, height = gt["meta"]["image_size"]["width"], gt["meta"]["image_size"]["height"]
     tokens = []
@@ -65,15 +76,16 @@ def cord_document(row: dict[str, Any], index: int, split: str, image_bytes: byte
                 beginning = False
     doc: dict[str, Any] = {"id": f"cord-{split}-{index:03d}", "type": "receipt", "source": "cord",
                            "split": split, "tokens": tokens, "currency": "IDR", "defects": [],
+                           "normalization_version": CORD_NORMALIZATION_VERSION,
                            "line_items": [], "vendor": "CORD public receipt", "number": f"CORD-{index:03d}"}
     gt_parse = gt["gt_parse"]
     for key, container, source in (("total", "total", "total_price"), ("tax", "sub_total", "tax_price"),
                                     ("subtotal", "sub_total", "subtotal_price")):
         value = gt_parse.get(container, {})
         if isinstance(value, dict) and source in value:
-            parsed = amount(value[source])
+            parsed = cord_amount(value[source])
             if parsed is not None:
-                doc[key] = float(parsed)
+                doc[key] = parsed
     menus = gt_parse.get("menu", [])
     if isinstance(menus, dict):
         menus = [menus]
@@ -82,15 +94,18 @@ def cord_document(row: dict[str, Any], index: int, split: str, image_bytes: byte
         for target, sources in (("quantity", ["cnt"]), ("unit_price", ["unitprice"]),
                                 ("amount", ["price", "itemsubtotal"])):
             for source in sources:
-                parsed = amount(menu.get(source))
+                parsed = cord_amount(menu.get(source))
                 if parsed is not None:
-                    parsed_row[target] = float(parsed)
+                    parsed_row[target] = parsed
                     break
         if parsed_row.get("description"):
             doc["line_items"].append(parsed_row)
     image_path = ROOT / "data/cord/images" / f"{doc['id']}.jpg"
     image_path.parent.mkdir(parents=True, exist_ok=True)
-    Image.open(io.BytesIO(image_bytes)).convert("RGB").save(image_path, quality=85)
+    if image_bytes is not None:
+        Image.open(io.BytesIO(image_bytes)).convert("RGB").save(image_path, quality=85)
+    elif not image_path.exists():
+        raise FileNotFoundError(f"Cannot refresh labels without the original committed image: {image_path}")
     doc["image_path"] = image_path.relative_to(ROOT).as_posix()
     doc["image"] = f"/data/images/{doc['id']}.jpg"
     # Preserve official labels, metadata and boxes alongside the remapped demonstration schema.
@@ -141,7 +156,17 @@ def fetch_cord() -> list[dict[str, Any]]:
         current = json.loads(corpus.read_text(encoding="utf-8"))
         if len(current) == 1000 and all(d.get("upstream_revision") == CORD_REVISION for d in current):
             validate_cord_population(current)
-            return current
+            if all(d.get("normalization_version") == CORD_NORMALIZATION_VERSION for d in current):
+                return current
+            refreshed = []
+            for document in current:
+                original = (ROOT / "data/cord/annotations" / f"{document['id']}.json").read_text(encoding="utf-8")
+                updated = cord_document({"ground_truth": original}, document["official_row_index"], document["split"], None)
+                updated.update({key: document[key] for key in ("upstream_revision", "upstream_shard", "upstream_row", "official_row_index")})
+                refreshed.append(updated)
+            write_json(corpus, refreshed)
+            print("Refreshed normalized CORD labels; committed image bytes unchanged", flush=True)
+            return refreshed
     names = [name for shards in CORD_SHARDS.values() for name in shards]
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         cached = dict(zip(names, pool.map(download_shard, names), strict=True))
@@ -187,7 +212,8 @@ def fetch_cord() -> list[dict[str, Any]]:
         "Images are re-encoded as JPEG quality 85 for repository size. All reported real OCR runs use these "
         "committed images. Boxes are normalized by the original image dimensions. CORD dot-separated "
         "thousands amounts are normalized to decimal values. Missing labels are excluded from field metrics, "
-        "rather than treated as known negatives. Label mapping is label-map.json.\n\n"
+        "rather than treated as known negatives. Repeated identical monetary labels resolve to one scalar; "
+        "conflicting or unparseable values remain unknown. Label mapping is label-map.json.\n\n"
         "Gold OCR contains annotated semantic lines and excludes some unannotated text. Real OCR sees the full "
         "image, so full-page CER/WER includes that annotation coverage mismatch.\n", encoding="utf-8")
     return docs

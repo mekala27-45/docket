@@ -9,6 +9,13 @@ from packages.core import ROOT, read_json
 from scripts import build_dataset, cache_ocr
 
 
+def test_cord_repeated_values_resolve_only_when_unambiguous() -> None:
+    assert build_dataset.cord_amount(["49.636", "49.636"]) == 49636
+    assert build_dataset.cord_amount(["49.636", "49.637"]) is None
+    assert build_dataset.cord_amount([]) is None
+    assert build_dataset.cord_amount(["-", "49.636"]) is None
+
+
 def test_full_cord_guard_accepts_exact_official_membership() -> None:
     documents = [{"id": f"{split}-{index}", "split": split}
                  for split, count in build_dataset.CORD_COUNTS.items() for index in range(count)]
